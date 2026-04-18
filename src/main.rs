@@ -1,6 +1,6 @@
 /* main.rs
  *
- * Copyright 2026 Francisco
+ * Copyright 2026 Ideve Core
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 mod application;
 mod config;
+mod server;
 mod window;
 
 use self::application::CommandaApplication;
@@ -27,25 +28,35 @@ use self::window::CommandaWindow;
 
 use config::{GETTEXT_PACKAGE, LOCALEDIR, PKGDATADIR};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
-use gtk::{gio, glib};
 use gtk::prelude::*;
+use gtk::{gio, glib};
 
 fn main() -> glib::ExitCode {
+    // Logging
+    tracing_subscriber::fmt().init();
+
     // Set up gettext translations
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR).expect("Unable to bind the text domain");
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8")
         .expect("Unable to set the text domain encoding");
     textdomain(GETTEXT_PACKAGE).expect("Unable to switch to the text domain");
 
-    // Load resources
-    let resources = gio::Resource::load(PKGDATADIR.to_owned() + "/commanda.gresource")
-        .expect("Could not load resources");
+    let resource_path = format!("{}/commanda.gresource", PKGDATADIR);
+    let resources = gio::Resource::load(&resource_path)
+        .or_else(|_| gio::Resource::load("build/src/commanda.gresource"))
+        .or_else(|_| gio::Resource::load("src/commanda.gresource"))
+        .expect("Could not load resources. Are you running from the project root?");
     gio::resources_register(&resources);
+
+    let _tx = server::spawn_server(7878);
 
     // Create a new GtkApplication. The application manages our main loop,
     // application windows, integration with the window manager/compositor, and
     // desktop features such as file opening and single-instance applications.
-    let app = CommandaApplication::new("io.github.idevecore.Commanda", &gio::ApplicationFlags::empty());
+    let app = CommandaApplication::new(
+        "io.github.idevecore.Commanda",
+        &gio::ApplicationFlags::empty(),
+    );
 
     // Run the application. This function will block until the application
     // exits. Upon return, we have our exit code to return to the shell. (This

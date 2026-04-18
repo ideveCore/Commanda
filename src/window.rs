@@ -1,6 +1,6 @@
 /* window.rs
  *
- * Copyright 2026 Francisco
+ * Copyright 2026 Ideve Core
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-use gtk::prelude::*;
 use adw::subclass::prelude::*;
+use gtk::prelude::*;
 use gtk::{gio, glib};
 
 mod imp {

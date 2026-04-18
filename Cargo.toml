@@ -7,6 +7,22 @@ edition = "2021"
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
 gtk = { version = "0.9", package = "gtk4", features = ["gnome_47"] }
 
+axum = { version = "0.8", features = ["ws"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower = { version = "0.5" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+rust-embed = { version = "8", features = ["axum"] }
+mime_guess = "2"
+
+walkdir = "2"
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
 [dependencies.adw]
 package = "libadwaita"
 version = "0.7"
