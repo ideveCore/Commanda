@@ -1,0 +1,16 @@
+[Desktop Entry]
+Name=Commanda
+GenericName=Commanda
+TryExec=commanda
+Exec=commanda
+Comment=Controller
+Icon=@icon@
+Terminal=false
+Type=Application
+Keywords=Commanda;Utility;Controller;
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true
+X-Purism-FormFactor=Workstation;Mobile;
+X-GNOME-SingleWindow=true

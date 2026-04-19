@@ -1,9 +1,29 @@
 pkgdatadir = get_option('prefix') / get_option('datadir') / meson.project_name()
 gnome = import('gnome')
 
+# ===== Blueprint compiler =====
+blueprints = custom_target(
+  'blueprints',
+  input: files(
+    'components/home/home.blp',
+    'components/preferences/preferences.blp',
+    'components/shortcuts/shortcuts.blp',
+    'window.blp',
+  ),
+  output: '.',
+  command: [
+    find_program('blueprint-compiler'),
+    'batch-compile',
+    '@OUTPUT@',
+    '@CURRENT_SOURCE_DIR@',
+    '@INPUT@',
+  ],
+)
+
 gnome.compile_resources(
   'commanda',
   'commanda.gresource.xml',
+  dependencies: blueprints,
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,
@@ -37,7 +57,7 @@ else
   rust_target = 'debug'
 endif
 
-cargo_build = custom_target(
+custom_target(
   'cargo-build',
   build_by_default: true,
   build_always_stale: true,
@@ -57,3 +77,6 @@ cargo_build = custom_target(
     '@OUTPUT@',
   ],
 )
+
+# ===== Install components sources =====
+install_subdir('components', install_dir: moduledir)

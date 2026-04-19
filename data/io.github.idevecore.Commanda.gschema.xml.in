@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="commanda">
+  <schema id="@app-id@" path="/io/github/idevecore/Commanda/">
+    <key name="width" type="i">
+      <default>420</default>
+    </key>
+    <key name="height" type="i">
+      <default>600</default>
+    </key>
+    <key name="is-maximized" type="b">
+      <default>false</default>
+    </key>
+    <key name="is-fullscreen" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+</schemalist>

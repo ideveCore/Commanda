@@ -19,6 +19,7 @@
  */
 
 mod application;
+mod components;
 mod config;
 mod server;
 mod window;

@@ -2,6 +2,8 @@
 <gresources>
   <gresource prefix="/io/github/idevecore/Commanda">
     <file preprocess="xml-stripblanks">window.ui</file>
-    <file preprocess="xml-stripblanks">shortcuts-dialog.ui</file>
+    <file preprocess="xml-stripblanks" alias="shortcuts-dialog.ui">components/shortcuts/shortcuts.ui</file>
+    <file preprocess="xml-stripblanks">components/home/home.ui</file>
+    <file preprocess="xml-stripblanks">components/preferences/preferences.ui</file>
   </gresource>
 </gresources>

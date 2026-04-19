@@ -1,6 +1,6 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-data/io.github.idevecore.Commanda.desktop.in
-data/io.github.idevecore.Commanda.metainfo.xml.in
-data/io.github.idevecore.Commanda.gschema.xml
+data/io.github.idevecore.Commanda.desktop.in.in
+data/io.github.idevecore.Commanda.appdata.xml.in.in
+data/io.github.idevecore.Commanda.gschema.xml.in
 src/window.ui

@@ -42,10 +42,11 @@
       "name": "commanda",
       "builddir": true,
       "buildsystem": "meson",
+      "config-opts": ["-Dprofile=default", "--libdir=lib"],
       "sources": [
         {
-          "type": "git",
-          "url": "file:///home/francisco/Projects"
+          "type": "dir",
+          "path": "."
         }
       ]
     }

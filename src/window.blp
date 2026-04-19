@@ -1,0 +1,58 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $CommandaWindow : Adw.ApplicationWindow {
+  width-request: 350;
+  height-request: 300;
+  default-width: 420;
+  default-height: 600;
+  title: _("Commanda");
+  content: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      [end]
+      MenuButton menu_button {
+        primary: true;
+        menu-model: primary_menu;
+        icon-name: "open-menu-symbolic";
+        tooltip-text: _("Main menu");
+      }
+    }
+    content: Adw.Bin content {};
+    [bottom]
+    Gtk.Box {
+      styles ["toolbar"]
+      orientation: horizontal;
+      halign: center;
+      margin-top: 6;
+      margin-bottom: 6;
+      Gtk.Label info {
+        styles ["dim-label"]
+        label: _("");
+      }
+      Gtk.LinkButton source {
+        tooltip-text: _("Source");
+        visible: false;
+      }
+    }
+  };
+}
+
+menu primary_menu {
+  section {
+    item {
+      label: _("_Preferences");
+      action: "app.preferences";
+    }
+
+    item {
+      label: _("_Keyboard Shortcuts");
+      action: "app.shortcuts";
+    }
+
+    item {
+      label: _("_About Commanda");
+      action: "app.about";
+    }
+  }
+}

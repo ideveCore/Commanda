@@ -23,6 +23,7 @@ use adw::subclass::prelude::*;
 use gettextrs::gettext;
 use gtk::{gio, glib};
 
+use crate::components::preferences::Preferences;
 use crate::config::VERSION;
 use crate::CommandaWindow;
 
@@ -55,9 +56,19 @@ mod imp {
         // to do that, we'll just present any existing window.
         fn activate(&self) {
             let application = self.obj();
+            let app_id = application.application_id().expect("");
             // Get the current window or create one if necessary
             let window = application.active_window().unwrap_or_else(|| {
                 let window = CommandaWindow::new(&*application);
+
+                let settings = gio::Settings::new(&app_id);
+                settings.bind("width", &window, "default-width").build();
+                settings.bind("height", &window, "default-height").build();
+                settings.bind("is-maximized", &window, "maximized").build();
+                settings
+                    .bind("is-fullscreen", &window, "fullscreened")
+                    .build();
+
                 window.upcast()
             });
 
@@ -92,7 +103,18 @@ impl CommandaApplication {
         let about_action = gio::ActionEntry::builder("about")
             .activate(move |app: &Self, _, _| app.show_about())
             .build();
-        self.add_action_entries([quit_action, about_action]);
+        let preferences_action = gio::ActionEntry::builder("preferences")
+            .activate(move |app: &Self, _, _| app.show_prefrerences())
+            .build();
+        self.set_accels_for_action("app.preferences", &["<control>comma"]);
+        self.add_action_entries([quit_action, about_action, preferences_action]);
+    }
+
+    fn show_prefrerences(&self) {
+        let window = self.active_window().unwrap();
+        let preferences = Preferences::new();
+
+        preferences.present(Some(&window));
     }
 
     fn show_about(&self) {

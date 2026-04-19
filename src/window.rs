@@ -18,8 +18,9 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+use crate::components::home::Home;
+use adw::prelude::*;
 use adw::subclass::prelude::*;
-use gtk::prelude::*;
 use gtk::{gio, glib};
 
 mod imp {
@@ -30,7 +31,7 @@ mod imp {
     pub struct CommandaWindow {
         // Template widgets
         #[template_child]
-        pub label: TemplateChild<gtk::Label>,
+        pub content: TemplateChild<adw::Bin>,
     }
 
     #[glib::object_subclass]
@@ -48,7 +49,14 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for CommandaWindow {}
+    impl ObjectImpl for CommandaWindow {
+        fn constructed(&self) {
+            self.parent_constructed();
+            let home_page = Home::new();
+            self.obj().set_content(&home_page);
+        }
+    }
+
     impl WidgetImpl for CommandaWindow {}
     impl WindowImpl for CommandaWindow {}
     impl ApplicationWindowImpl for CommandaWindow {}
@@ -65,5 +73,11 @@ impl CommandaWindow {
         glib::Object::builder()
             .property("application", application)
             .build()
+    }
+
+    pub fn set_content<P: IsA<gtk::Widget>>(&self, page: &P) {
+        let imp = self.imp();
+        let content = imp.content.get();
+        content.set_child(Some(page));
     }
 }
