@@ -19,6 +19,8 @@
  */
 
 use anyhow::{Context, Result};
+use gtk::gio;
+use gtk::prelude::SettingsExt;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
 
@@ -28,7 +30,7 @@ const BING_API_URL: &str = "https://www.bing.com/HPImageArchive.aspx?format=js&i
 #[derive(Clone)]
 pub struct WallpaperService {
     client: reqwest::Client,
-    cache: Arc<OnceCell<String>>,
+    cache: Arc<OnceCell<Vec<u8>>>,
 }
 
 impl WallpaperService {
@@ -39,26 +41,78 @@ impl WallpaperService {
         }
     }
 
-    pub async fn get_image_url(&self) -> Result<&str> {
+    pub async fn get_image(&self) -> Result<&[u8]> {
         self.cache
             .get_or_try_init(|| async {
-                let json: serde_json::Value = self
-                    .client
-                    .get(BING_API_URL)
-                    .send()
-                    .await
-                    .context("Failed to fetch Bing API")?
-                    .json()
-                    .await
-                    .context("Failed to parse Bing API JSON")?;
-
-                let relative_url = json["images"][0]["url"]
-                    .as_str()
-                    .context("Missing 'url' field in Bing API response")?;
-
-                Ok(format!("{}{}", BING_BASE_URL, relative_url))
+                match self.fetch_bing_image().await {
+                    Ok(bytes) => Ok(bytes),
+                    Err(e) => {
+                        eprintln!("Bing wallpaper failed ({e}), falling back to system wallpaper");
+                        self.fetch_system_wallpaper().await
+                    }
+                }
             })
             .await
-            .map(|s| s.as_str())
+            .map(|v| v.as_slice())
+    }
+
+    async fn fetch_bing_image(&self) -> Result<Vec<u8>> {
+        let url = self.fetch_bing_url().await?;
+        let bytes = self
+            .client
+            .get(&url)
+            .send()
+            .await
+            .context("Failed to download Bing wallpaper")?
+            .error_for_status()
+            .context("Bing returned an error status for the image")?
+            .bytes()
+            .await
+            .context("Failed to read Bing image bytes")?;
+
+        Ok(bytes.to_vec())
+    }
+
+    async fn fetch_bing_url(&self) -> Result<String> {
+        let json: serde_json::Value = self
+            .client
+            .get(BING_API_URL)
+            .send()
+            .await
+            .context("Failed to fetch Bing API")?
+            .json()
+            .await
+            .context("Failed to parse Bing API JSON")?;
+
+        let relative_url = json["images"][0]["url"]
+            .as_str()
+            .context("Missing 'url' field in Bing API response")?;
+
+        Ok(format!("{}{}", BING_BASE_URL, relative_url))
+    }
+
+    async fn fetch_system_wallpaper(&self) -> Result<Vec<u8>> {
+        let path = tokio::task::spawn_blocking(|| {
+            let settings = gio::Settings::new("org.gnome.desktop.background");
+
+            let binding = settings.string("picture-uri");
+            let uri = if binding.is_empty() {
+                settings.string("picture-uri-dark")
+            } else {
+                binding
+            };
+
+            uri.strip_prefix("file://")
+                .map(|s| s.to_owned())
+                .unwrap_or_else(|| uri.to_string())
+        })
+        .await
+        .context("Failed to read GSettings")?;
+
+        let bytes = tokio::fs::read(&path)
+            .await
+            .with_context(|| format!("Failed to read system wallpaper at '{path}'"))?;
+
+        Ok(bytes)
     }
 }

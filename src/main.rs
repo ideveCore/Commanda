@@ -33,6 +33,8 @@ use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use gtk::prelude::*;
 use gtk::{gio, glib};
 
+const APP_ID: &str = "io.github.idevecore.Commanda";
+
 fn main() -> glib::ExitCode {
     // Logging
     tracing_subscriber::fmt().init();
@@ -50,15 +52,12 @@ fn main() -> glib::ExitCode {
         .expect("Could not load resources. Are you running from the project root?");
     gio::resources_register(&resources);
 
-    let _tx = server::spawn_server(7878);
+    let _tx = server::spawn_server(7878, APP_ID);
 
     // Create a new GtkApplication. The application manages our main loop,
     // application windows, integration with the window manager/compositor, and
     // desktop features such as file opening and single-instance applications.
-    let app = CommandaApplication::new(
-        "io.github.idevecore.Commanda",
-        &gio::ApplicationFlags::empty(),
-    );
+    let app = CommandaApplication::new(APP_ID, &gio::ApplicationFlags::empty());
 
     // Run the application. This function will block until the application
     // exits. Upon return, we have our exit code to return to the shell. (This

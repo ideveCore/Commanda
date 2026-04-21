@@ -14,4 +14,12 @@
       <default>false</default>
     </key>
   </schema>
+  <schema id="@app-id@.Weather" path="/io/github/idevecore/Commanda/Weather/">
+    <key name="use-ip-location" type="b">
+      <default>true</default>
+    </key>
+    <key name="location" type="s">
+      <default>''</default>
+    </key>
+  </schema>
 </schemalist>

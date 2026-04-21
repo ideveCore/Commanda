@@ -18,5 +18,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-pub mod wallpaper;
 pub mod weather;
+
+pub use weather::WeatherService;

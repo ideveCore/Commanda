@@ -18,15 +18,37 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
+use axum::{
+    extract::{FromRef, State},
+    http::StatusCode,
+    response::{IntoResponse, Json},
+    routing::get,
+    Router,
+};
 
-use crate::server::SharedState;
+use crate::{
+    server::SharedState,
+    services::{wallpaper::WallpaperService, weather::WeatherService},
+};
 use serde_json::{json, Value};
+
+impl FromRef<SharedState> for WallpaperService {
+    fn from_ref(state: &SharedState) -> Self {
+        state.wallpaper.clone()
+    }
+}
+
+impl FromRef<SharedState> for WeatherService {
+    fn from_ref(state: &SharedState) -> Self {
+        state.weather.clone()
+    }
+}
 
 pub fn router() -> Router<SharedState> {
     Router::new()
         .route("/api/status", get(status))
         .route("/api/wallpaper", get(wallpaper))
+        .route("/api/weather", get(weather))
 }
 
 async fn status(State(_state): State<SharedState>) -> Json<Value> {
@@ -37,17 +59,21 @@ async fn status(State(_state): State<SharedState>) -> Json<Value> {
     }))
 }
 
-async fn wallpaper(
-    State(state): State<SharedState>,
-) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
-    match state.wallpaper.get_image_url().await {
-        Ok(url) => Ok(Json(json!({ "image_url": url }))),
-        Err(err) => {
-            tracing::error!("Failed to get wallpaper: {err}");
-            Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({ "error": "Failed to fetch wallpaper" })),
-            ))
-        }
+async fn wallpaper(State(svc): State<WallpaperService>) -> impl IntoResponse {
+    match svc.get_image().await {
+        Ok(bytes) => (
+            StatusCode::OK,
+            [("content-type", "image/jpeg")],
+            bytes.to_vec(),
+        )
+            .into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn weather(State(svc): State<WeatherService>) -> impl IntoResponse {
+    match svc.get_weather().await {
+        Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }

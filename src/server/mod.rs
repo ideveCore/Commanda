@@ -20,11 +20,14 @@
 
 pub mod routes;
 
-use crate::services::wallpaper::WallpaperService;
+use crate::services::{wallpaper::WallpaperService, weather::WeatherService};
 use axum::Router;
+use gtk::gio;
+use gtk::gio::prelude::*;
+use minijinja::Environment;
 use rust_embed::RustEmbed;
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
@@ -38,30 +41,74 @@ pub struct WebAssets;
 pub struct AppState {
     pub event_tx: broadcast::Sender<String>,
     pub wallpaper: WallpaperService,
+    pub weather: WeatherService,
+    pub template_env: Arc<Environment<'static>>,
+    pub settings: Arc<RwLock<SettingsCache>>,
+}
+
+#[derive(Clone)]
+pub struct SettingsCache {
+    pub use_ip_location: bool,
+    pub location: String,
+}
+
+impl SettingsCache {
+    fn from_settings(s: &gio::Settings) -> Self {
+        Self {
+            use_ip_location: s.boolean("use-ip-location"),
+            location: s.string("location").to_string(),
+        }
+    }
 }
 
 pub type SharedState = Arc<AppState>;
-pub type EventTx = broadcast::Sender<String>;
 
-pub fn spawn_server(port: u16) -> EventTx {
+fn create_template_env() -> Environment<'static> {
+    let mut env = Environment::new();
+
+    env.set_loader(|name| {
+        let path = format!("templates/{name}");
+        Ok(WebAssets::get(&path).and_then(|f| String::from_utf8(f.data.to_vec()).ok()))
+    });
+
+    env
+}
+
+pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
     let (tx, _) = broadcast::channel::<String>(32);
-    let tx_clone = tx.clone();
+    let settings = gio::Settings::new(&format!("{}.Weather", app_id));
+    let settings_cache = Arc::new(RwLock::new(SettingsCache::from_settings(&settings)));
+
+    let state = Arc::new(AppState {
+        event_tx: tx,
+        wallpaper: WallpaperService::new(),
+        weather: WeatherService::new(Arc::clone(&settings_cache)),
+        template_env: Arc::new(create_template_env()),
+        settings: settings_cache,
+    });
+
+    let state_for_signal = Arc::clone(&state);
+
+    settings.connect_changed(None, move |s, key| {
+        tracing::debug!("Setting changed: {}", key);
+
+        if let Ok(mut cache) = state_for_signal.settings.write() {
+            *cache = SettingsCache::from_settings(s);
+        }
+    });
+
+    let state_for_server = Arc::clone(&state);
 
     std::thread::spawn(move || {
         tokio::runtime::Runtime::new()
             .expect("Falha ao criar runtime Tokio")
-            .block_on(run_server(port, tx_clone));
+            .block_on(run_server(port, state_for_server));
     });
 
-    tx
+    state
 }
 
-async fn run_server(port: u16, tx: EventTx) {
-    let state = Arc::new(AppState {
-        event_tx: tx,
-        wallpaper: WallpaperService::new(),
-    });
-
+async fn run_server(port: u16, state: SharedState) {
     let app = Router::new()
         .merge(routes::all())
         .layer(CorsLayer::permissive())
