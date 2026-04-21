@@ -20,6 +20,7 @@
 
 pub mod routes;
 
+use crate::services::wallpaper::WallpaperService;
 use axum::Router;
 use rust_embed::RustEmbed;
 use std::net::SocketAddr;
@@ -36,6 +37,7 @@ pub struct WebAssets;
 #[derive(Clone)]
 pub struct AppState {
     pub event_tx: broadcast::Sender<String>,
+    pub wallpaper: WallpaperService,
 }
 
 pub type SharedState = Arc<AppState>;
@@ -55,7 +57,10 @@ pub fn spawn_server(port: u16) -> EventTx {
 }
 
 async fn run_server(port: u16, tx: EventTx) {
-    let state = Arc::new(AppState { event_tx: tx });
+    let state = Arc::new(AppState {
+        event_tx: tx,
+        wallpaper: WallpaperService::new(),
+    });
 
     let app = Router::new()
         .merge(routes::all())

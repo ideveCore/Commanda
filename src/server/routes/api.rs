@@ -18,13 +18,15 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-use axum::{extract::State, response::Json, routing::get, Router};
+use axum::{extract::State, http::StatusCode, response::Json, routing::get, Router};
 
 use crate::server::SharedState;
 use serde_json::{json, Value};
 
 pub fn router() -> Router<SharedState> {
-    Router::new().route("/api/status", get(status))
+    Router::new()
+        .route("/api/status", get(status))
+        .route("/api/wallpaper", get(wallpaper))
 }
 
 async fn status(State(_state): State<SharedState>) -> Json<Value> {
@@ -33,4 +35,19 @@ async fn status(State(_state): State<SharedState>) -> Json<Value> {
       "app": "Commanda",
       "version": env!("CARGO_PKG_VERSION")
     }))
+}
+
+async fn wallpaper(
+    State(state): State<SharedState>,
+) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
+    match state.wallpaper.get_image_url().await {
+        Ok(url) => Ok(Json(json!({ "image_url": url }))),
+        Err(err) => {
+            tracing::error!("Failed to get wallpaper: {err}");
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": "Failed to fetch wallpaper" })),
+            ))
+        }
+    }
 }

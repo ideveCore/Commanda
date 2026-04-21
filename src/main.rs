@@ -22,6 +22,7 @@ mod application;
 mod components;
 mod config;
 mod server;
+mod services;
 mod window;
 
 use self::application::CommandaApplication;
