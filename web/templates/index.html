@@ -1,13 +1,726 @@
 {% extends "base.html" %} {% block content %}
-<div class="flex flex-col items-center gap-6 mt-12">
-  <h1 class="text-4xl font-bold">Bem-vindo ao Commanda</h1>
-  <p class="text-base-content/70">
-    Controle seu computador pelo celular como um Stream Deck.
-  </p>
+<section
+  class="relative z-10 flex flex-col items-center justify-center min-h-screen text-white drop-shadow-2xl"
+>
+  <!-- ===== LAYOUT WRAPPER ===== -->
+  <div
+    class="relative z-10 min-h-screen text-white drop-shadow-2xl flex flex-col"
+  >
+    <!-- TOP BAR (mobile): weather + nav buttons -->
+    <div class="flex items-start justify-between p-3 lg:hidden">
+      <!-- Weather card inline (mobile) -->
+      <div
+        id="weather-card-mobile"
+        class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-3 hidden w-auto max-w-[200px]"
+      >
+        <div class="flex items-center gap-2">
+          <i
+            id="weather-icon-mobile"
+            class="fa-solid fa-cloud text-2xl text-white/90 shrink-0"
+          ></i>
+          <div class="min-w-0">
+            <h5
+              class="text-xl font-bold tracking-tight text-white leading-none"
+            >
+              <span id="weather-temp-mobile">--°C</span>
+            </h5>
+            <p
+              id="weather-desc-mobile"
+              class="text-xs text-white/80 font-medium truncate"
+            >
+              Carregando...
+            </p>
+            <p
+              id="weather-location-mobile"
+              class="text-xs text-white/60 truncate"
+            >
+              Buscando...
+            </p>
+          </div>
+        </div>
+      </div>
 
-  <div class="grid grid-cols-2 gap-4 mt-6">
-    <a href="/deck" class="btn btn-primary btn-lg">Abrir Deck</a>
-    <a href="/settings" class="btn btn-outline btn-lg">Configurações</a>
+      <!-- Nav buttons (mobile) — top right -->
+      <div class="flex gap-1 ml-auto">
+        <a
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-11 h-11 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="Meus Espaços (Spacebar)"
+          href="/home"
+        >
+          <i class="fa-solid fa-house text-xl"></i>
+        </a>
+        <a
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-11 h-11 transition-colors duration-300 focus:outline-none border-none outline-none"
+          href="/settings"
+          title="Configurações (Ctrl+.)"
+        >
+          <i class="fa-solid fa-gear text-xl"></i>
+        </a>
+        <a
+          id="show_fullscreen_mobile"
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-11 h-11 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="Tela cheia"
+        >
+          <i class="fa-solid fa-expand text-xl"></i>
+        </a>
+        <button
+          id="show-modal-mobile"
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-11 h-11 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="QR Code"
+        >
+          <i class="fa-solid fa-qrcode text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- CENTER: Clock + greeting -->
+    <div class="flex-1 flex flex-col items-center justify-center px-4">
+      <h2
+        id="greeting"
+        class="text-lg lg:text-5xl font-semibold mb-3 lg:mb-6 text-white/95 tracking-wide drop-shadow-lg opacity-0 transition-opacity duration-1000"
+      >
+        Boa tarde
+      </h2>
+      <h1
+        id="clock"
+        class="text-6xl sm:text-7xl lg:text-9xl font-bold tracking-tighter mb-1 lg:mb-2"
+      >
+        00:00
+      </h1>
+      <p
+        id="date"
+        class="text-base sm:text-lg md:text-2xl font-medium tracking-wide text-gray-200 mb-4 lg:mb-8"
+      >
+        Carregando...
+      </p>
+
+      <!-- Music card inline (mobile) -->
+      <div
+        id="music-card-mobile"
+        class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-3 w-full max-w-xs lg:hidden flex items-center gap-3 transition-all duration-500 mb-4"
+      >
+        <div
+          class="relative w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white/5 flex items-center justify-center shadow-md"
+        >
+          <i
+            id="music-art-fallback-mobile"
+            class="fa-solid fa-music text-2xl text-white/30 hidden"
+          ></i>
+          <img
+            id="music-art-mobile"
+            src=""
+            class="absolute inset-0 w-full h-full object-cover hidden"
+            onerror="
+              this.classList.add('hidden');
+              document
+                .getElementById('music-art-fallback-mobile')
+                .classList.remove('hidden');
+            "
+          />
+        </div>
+        <div class="flex-1 overflow-hidden">
+          <div class="flex items-center gap-1.5 mb-0.5">
+            <i
+              id="music-status-icon-mobile"
+              class="fa-solid fa-play text-[9px] text-white/70"
+            ></i>
+            <p
+              id="music-player-name-mobile"
+              class="text-[9px] text-white/70 uppercase tracking-widest font-bold truncate"
+            >
+              Player
+            </p>
+          </div>
+          <h5
+            id="music-title-mobile"
+            class="text-sm font-bold text-white truncate leading-tight mb-0.5"
+          >
+            Title
+          </h5>
+          <p
+            id="music-artist-mobile"
+            class="text-xs text-white/70 truncate mb-1.5"
+          >
+            Artist
+          </p>
+          <div
+            id="music-progress-container-mobile"
+            class="w-full hidden h-1 bg-white/20 rounded-full mb-2 overflow-hidden relative"
+          >
+            <div
+              id="music-progress-bar-mobile"
+              class="h-full bg-white w-0 transition-all duration-300 ease-linear"
+            ></div>
+          </div>
+          <div class="flex items-center gap-3 text-white/90">
+            <button
+              id="music-prev-btn-mobile"
+              class="hover:text-white transition-colors focus:outline-none hover:scale-110 transform"
+            >
+              <i class="fa-solid fa-backward-step text-base"></i>
+            </button>
+            <button
+              id="music-play-btn-mobile"
+              class="hover:text-white transition-colors focus:outline-none hover:scale-105 transform border border-white/30 rounded-full w-7 h-7 flex items-center justify-center hover:bg-white/10"
+            >
+              <i class="fa-solid fa-play text-xs translate-x-[1px]"></i>
+            </button>
+            <button
+              id="music-next-btn-mobile"
+              class="hover:text-white transition-colors focus:outline-none hover:scale-110 transform"
+            >
+              <i class="fa-solid fa-forward-step text-base"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav buttons (desktop) — inline below clock -->
+      <div
+        class="hidden lg:flex gap-4 opacity-80 hover:opacity-100 transition-opacity mt-8"
+      >
+        <a
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-16 h-16 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="Meus Espaços (Spacebar)"
+          href="/home"
+        >
+          <i class="fa-solid fa-house text-2xl"></i>
+        </a>
+        <a
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-16 h-16 transition-colors duration-300 focus:outline-none border-none outline-none"
+          href="/settings"
+          title="Configurações (Ctrl+.)"
+        >
+          <i class="fa-solid fa-gear text-2xl"></i>
+        </a>
+        <a
+          id="show_fullscreen"
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-16 h-16 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="Tela cheia"
+        >
+          <i class="fa-solid fa-expand text-2xl"></i>
+        </a>
+        <button
+          id="show-modal"
+          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-16 h-16 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="QR Code"
+        >
+          <i class="fa-solid fa-qrcode text-2xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- DESKTOP: weather + music (absolute, original layout) -->
+    <div
+      id="weather-card"
+      class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-6 hidden absolute lg:top-10 lg:right-10 w-72"
+    >
+      <div class="flex items-center gap-4">
+        <i
+          id="weather-icon"
+          class="fa-solid fa-cloud text-4xl text-white/90"
+        ></i>
+        <div>
+          <h5
+            id="weather-temp"
+            class="text-3xl font-bold tracking-tight text-white"
+          >
+            --°C
+          </h5>
+          <p id="weather-desc" class="text-base text-white/90 font-medium">
+            Carregando...
+          </p>
+        </div>
+      </div>
+      <div
+        class="flex justify-between items-center mt-4 pt-4 border-t border-white/20"
+      >
+        <div>
+          <p
+            id="weather-location"
+            class="text-sm text-white/90 font-medium truncate"
+          >
+            Buscando localização...
+          </p>
+          <div class="flex items-center gap-2 mt-1">
+            <i class="fa-solid fa-wind text-white/70 text-xs"></i>
+            <p id="weather-wind" class="text-xs text-white/70">
+              Vento: -- km/h
+            </p>
+          </div>
+        </div>
+        <a
+          class="flex items-center justify-center text-white/70 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-10 h-10 transition-colors duration-300 focus:outline-none border-none outline-none"
+          title="Mudar localização"
+          href="/settings#location_section"
+        >
+          <i class="fa-solid fa-location-dot text-lg"></i>
+        </a>
+      </div>
+    </div>
+
+    <div
+      id="music-card"
+      class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-4 hidden absolute lg:bottom-10 lg:left-10 w-72 items-center gap-4 transition-all duration-500"
+    >
+      <div
+        class="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-white/5 flex items-center justify-center shadow-md"
+      >
+        <i
+          id="music-art-fallback"
+          class="fa-solid fa-music text-3xl text-white/30 hidden"
+        ></i>
+        <img
+          id="music-art"
+          src=""
+          class="absolute inset-0 w-full h-full object-cover hidden"
+          onerror="
+            this.classList.add('hidden');
+            document
+              .getElementById('music-art-fallback')
+              .classList.remove('hidden');
+          "
+        />
+      </div>
+      <div class="flex-1 overflow-hidden">
+        <div class="flex items-center gap-2 mb-1">
+          <i
+            id="music-status-icon"
+            class="fa-solid fa-play text-[10px] text-white/70"
+          ></i>
+          <p
+            id="music-player-name"
+            class="text-[10px] text-white/70 uppercase tracking-widest font-bold truncate"
+          >
+            Player
+          </p>
+        </div>
+        <h5
+          id="music-title"
+          class="text-base font-bold text-white truncate leading-tight mb-0.5"
+        >
+          Title
+        </h5>
+        <p id="music-artist" class="text-xs text-white/70 truncate mb-2">
+          Artist
+        </p>
+        <div
+          id="music-progress-container"
+          class="w-full hidden h-1 bg-white/20 rounded-full mb-3 overflow-hidden relative"
+        >
+          <div
+            id="music-progress-bar"
+            class="h-full bg-white w-0 transition-all duration-300 ease-linear"
+          ></div>
+        </div>
+        <div class="flex items-center gap-4 text-white/90">
+          <button
+            id="music-prev-btn"
+            class="hover:text-white transition-colors focus:outline-none hover:scale-110 transform"
+          >
+            <i class="fa-solid fa-backward-step text-lg"></i>
+          </button>
+          <button
+            id="music-play-btn"
+            class="hover:text-white transition-colors focus:outline-none hover:scale-105 transform border border-white/30 rounded-full w-8 h-8 flex items-center justify-center hover:bg-white/10"
+          >
+            <i class="fa-solid fa-play text-sm translate-x-[1px]"></i>
+          </button>
+          <button
+            id="music-next-btn"
+            class="hover:text-white transition-colors focus:outline-none hover:scale-110 transform"
+          >
+            <i class="fa-solid fa-forward-step text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+</section>
+
+<script type="module">
+  "use strict";
+  import { Requests } from "../js/requests.js";
+  import { weather_conditions, format_number } from "../js/utils.js";
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    // const qr_modal = document.querySelector("#qr-modal");
+    // const show_modal = document.querySelector("#show-modal");
+    // const show_modal_mobile = document.querySelector("#show-modal-mobile");
+    // const close_modal = document.querySelector("#close-modal");
+    // const qrcode_img = document.querySelector("#qrcode-img");
+    // const show_fullscreen = document.querySelector("#show_fullscreen");
+    // const show_fullscreen_mobile = document.querySelector(
+    //   "#show_fullscreen_mobile",
+    // );
+    // const clock = document.querySelector("#clock");
+    // const date = document.querySelector("#date");
+    // const greeting = document.querySelector("#greeting");
+
+    // Desktop weather elements
+    const weather_temp = document.querySelector("#weather-temp");
+    const weather_desc = document.querySelector("#weather-desc");
+    const weather_location = document.querySelector("#weather-location");
+    const weather_wind = document.querySelector("#weather-wind");
+    const weather_icon = document.querySelector("#weather-icon");
+    const weather_card = document.querySelector("#weather-card");
+
+    // Mobile weather elements
+    const weather_temp_mobile = document.querySelector("#weather-temp-mobile");
+    const weather_desc_mobile = document.querySelector("#weather-desc-mobile");
+    const weather_location_mobile = document.querySelector(
+      "#weather-location-mobile",
+    );
+    const weather_icon_mobile = document.querySelector("#weather-icon-mobile");
+    const weather_card_mobile = document.querySelector("#weather-card-mobile");
+
+    // Desktop music elements
+    // const music_prev_btn = document.querySelector("#music-prev-btn");
+    // const music_play_btn = document.querySelector("#music-play-btn");
+    // const music_next_btn = document.querySelector("#music-next-btn");
+    // const music_title = document.querySelector("#music-title");
+    // const music_artist = document.querySelector("#music-artist");
+    // const music_player_name = document.querySelector("#music-player-name");
+    // const music_art = document.querySelector("#music-art");
+    // const music_art_fallback = document.querySelector("#music-art-fallback");
+    // const music_status_icon = document.querySelector("#music-status-icon");
+    // const music_progress_container = document.querySelector(
+    //   "#music-progress-container",
+    // );
+    // const music_progress_bar = document.querySelector("#music-progress-bar");
+    // const music_card = document.querySelector("#music-card");
+
+    // Mobile music elements
+    // const music_prev_btn_mobile = document.querySelector(
+    //   "#music-prev-btn-mobile",
+    // );
+    // const music_play_btn_mobile = document.querySelector(
+    //   "#music-play-btn-mobile",
+    // );
+    // const music_next_btn_mobile = document.querySelector(
+    //   "#music-next-btn-mobile",
+    // );
+    // const music_title_mobile = document.querySelector("#music-title-mobile");
+    // const music_artist_mobile = document.querySelector("#music-artist-mobile");
+    // const music_player_name_mobile = document.querySelector(
+    //   "#music-player-name-mobile",
+    // );
+    // const music_art_mobile = document.querySelector("#music-art-mobile");
+    // const music_art_fallback_mobile = document.querySelector(
+    //   "#music-art-fallback-mobile",
+    // );
+    // const music_status_icon_mobile = document.querySelector(
+    //   "#music-status-icon-mobile",
+    // );
+    // const music_progress_container_mobile = document.querySelector(
+    //   "#music-progress-container-mobile",
+    // );
+    // const music_progress_bar_mobile = document.querySelector(
+    //   "#music-progress-bar-mobile",
+    // );
+    // const music_card_mobile = document.querySelector("#music-card-mobile");
+
+    // const server_data_element = document.querySelector("#server-data");
+    // const config = JSON.parse(JSON.parse(server_data_element.textContent));
+    // const user_name = config.Name;
+    // let musicProgressInterval;
+
+    // const loadQrCode = async () => {
+    //   try {
+    //     const requests = new Requests({ url: "/api/qrcode" });
+    //     const response = await requests.get();
+    //     if (response && response.image) {
+    //       qrcode_img.src = response.image;
+    //     }
+    //   } catch (e) {
+    //     console.error("Erro ao carregar QR Code:", e);
+    //   }
+    // };
+
+    // const toggleFullscreen = (event) => {
+    //   if (document.fullscreenElement) {
+    //     document.exitFullscreen();
+    //     show_fullscreen.innerHTML =
+    //       "<i class="fa-solid fa-expand text-2xl"></i>";
+    //     if (show_fullscreen_mobile)
+    //       show_fullscreen_mobile.innerHTML =
+    //         "<i class="fa-solid fa-expand text-xl"></i>";
+    //   } else {
+    //     show_fullscreen.innerHTML =
+    //       "<i class="fa-solid fa-compress text-2xl"></i>";
+    //     if (show_fullscreen_mobile)
+    //       show_fullscreen_mobile.innerHTML =
+    //         "<i class="fa-solid fa-compress text-xl"></i>";
+    //     document.documentElement.requestFullscreen();
+    //   }
+
+    //   void event;
+    // };
+
+    // const loadKeyBoardShortcuts = () => {
+    //   const shortcuts = new KeyboardShortcutManager();
+
+    //   shortcuts.addShortcut(" ", () => {
+    //     window.location.href = "/home";
+    //   });
+    //   shortcuts.addCtrlShortcut(".", () => {
+    //     window.location.href = "/settings";
+    //   });
+    // };
+
+    // const updateTime = () => {
+    //   const now = new Date();
+    //   clock.innerText = now.toLocaleTimeString("pt-BR", {
+    //     hour: "2-digit",
+    //     minute: "2-digit",
+    //   });
+    //   let dateStr = now.toLocaleDateString("pt-BR", {
+    //     weekday: "long",
+    //     year: "numeric",
+    //     month: "long",
+    //     day: "numeric",
+    //   });
+    //   date.innerText = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    // };
+
+    // const updateGreeting = () => {
+    //   const hour = new Date().getHours();
+    //   let greeter = "Boa noite";
+    //   if (hour >= 5 && hour < 12) greeter = "Bom dia";
+    //   else if (hour >= 12 && hour < 18) greeter = "Boa tarde";
+    //   greeting.innerText = user_name ? `${greeter}, ${user_name}` : greeter;
+    //   greeting.classList.remove("opacity-0");
+    // };
+
+    const updateWeatherConditions = async () => {
+      try {
+        const requests = new Requests({ url: "/api/weather" });
+        const data = await requests.get();
+        if (data) {
+          const conditionData = weather_conditions[data.weathercondition];
+          const tempStr = `${format_number(data.temperature)} °C`;
+          const locationStr = `${data.city}, ${data.region}`;
+          const windStr = `Vento: ${format_number(data.windspeed)} km/h`;
+
+          // Desktop
+          weather_temp.innerText = tempStr;
+          weather_location.innerText = locationStr;
+          weather_wind.innerText = windStr;
+          if (conditionData) {
+            weather_desc.innerText = conditionData.description;
+            weather_icon.className =
+              conditionData.icon + " text-4xl text-white/90";
+          }
+          weather_card.classList.remove("hidden");
+
+          // Mobile
+          if (weather_temp_mobile) weather_temp_mobile.innerText = tempStr;
+          if (weather_location_mobile)
+            weather_location_mobile.innerText = locationStr;
+          if (weather_desc_mobile && conditionData)
+            weather_desc_mobile.innerText = conditionData.description;
+          if (weather_icon_mobile && conditionData)
+            weather_icon_mobile.className =
+              conditionData.icon + " text-2xl text-white/90 shrink-0";
+          if (weather_card_mobile)
+            weather_card_mobile.classList.remove("hidden");
+        }
+      } catch (e) {
+        console.error("Erro ao buscar dados do clima:", e);
+      }
+    };
+
+    // Media controls
+    // const sendMediaCommand = async (command) => {
+    //   try {
+    //     const requests = new Requests({ url: "/api/playing/command" });
+    //     await requests.post({ command });
+    //   } catch (e) {
+    //     console.error("Erro ao enviar comando de mídia:", e);
+    //   }
+    // };
+
+    // const renderMusicCard = (data) => {
+    //   if (data && (data.status === "Playing" || data.status === "Paused")) {
+    //     const titleStr = data.title || "Desconhecido";
+    //     const artistStr = data.artist || "Desconhecido";
+    //     const playerStr = data.player || "Player";
+
+    //     // Desktop
+    //     music_title.innerText = titleStr;
+    //     music_artist.innerText = artistStr;
+    //     music_player_name.innerText = playerStr;
+
+    //     // Mobile
+    //     if (music_title_mobile) music_title_mobile.innerText = titleStr;
+    //     if (music_artist_mobile) music_artist_mobile.innerText = artistStr;
+    //     if (music_player_name_mobile)
+    //       music_player_name_mobile.innerText = playerStr;
+
+    //     if (data.art_url) {
+    //       if (music_art.getAttribute("src") !== data.art_url) {
+    //         music_art.setAttribute("src", data.art_url);
+    //         music_art.classList.remove("hidden");
+    //         music_art_fallback.classList.add("hidden");
+    //       }
+    //       if (
+    //         music_art_mobile &&
+    //         music_art_mobile.getAttribute("src") !== data.art_url
+    //       ) {
+    //         music_art_mobile.setAttribute("src", data.art_url);
+    //         music_art_mobile.classList.remove("hidden");
+    //         if (music_art_fallback_mobile)
+    //           music_art_fallback_mobile.classList.add("hidden");
+    //       }
+    //     } else {
+    //       music_art.setAttribute("src", "");
+    //       music_art.classList.add("hidden");
+    //       music_art_fallback.classList.remove("hidden");
+    //       if (music_art_mobile) {
+    //         music_art_mobile.setAttribute("src", "");
+    //         music_art_mobile.classList.add("hidden");
+    //       }
+    //       if (music_art_fallback_mobile)
+    //         music_art_fallback_mobile.classList.remove("hidden");
+    //     }
+
+    //     if (data.status === "Playing") {
+    //       music_status_icon.className = "fa-solid fa-pause text-[10px] text-white/70";
+    //       music_play_btn.innerHTML =
+    //         '<i class="fa-solid fa-pause text-sm"></i>';
+    //       music_play_btn.onclick = () => sendMediaCommand("pause");
+    //       if (music_status_icon_mobile) music_status_icon_mobile.className = "fa-solid fa-pause text-[9px] text-white/70";
+    //       if (music_play_btn_mobile) {
+    //         music_play_btn_mobile.innerHTML =
+    //           '<i class="fa-solid fa-pause text-xs"></i>';
+    //         music_play_btn_mobile.onclick = () => sendMediaCommand("pause");
+    //       }
+    //     } else {
+    //       music_status_icon.className = "fa-solid fa-play text-[10px] text-white/70";
+    //       music_play_btn.innerHTML =
+    //         '<i class="fa-solid fa-play text-sm translate-x-[1px]"></i>';
+    //       music_play_btn.onclick = () => sendMediaCommand("play");
+    //       if (music_status_icon_mobile) music_status_icon_mobile.className = "fa-solid fa-play text-[9px] text-white/70";
+    //       if (music_play_btn_mobile) {
+    //         music_play_btn_mobile.innerHTML =
+    //           '<i class="fa-solid fa-play text-xs translate-x-[1px]"></i>';
+    //         music_play_btn_mobile.onclick = () => sendMediaCommand("play");
+    //       }
+    //     }
+
+    //     if (musicProgressInterval) clearInterval(musicProgressInterval);
+
+    //     if (
+    //       data.duration > 0 ||
+    //       (data.position > 0 && data.status === "Playing")
+    //     ) {
+    //       music_progress_container.classList.remove("hidden");
+    //       if (music_progress_container_mobile)
+    //         music_progress_container_mobile.classList.remove("hidden");
+    //       const updateProgressBar = () => {
+    //         let currentPos = data.position;
+    //         if (data.status === "Playing" && data.fetched_at) {
+    //           currentPos += (Date.now() - data.fetched_at) * 1000 * data.rate;
+    //         }
+    //         if (data.duration > 0) {
+    //           let pct = Math.min(
+    //             100,
+    //             Math.max(0, (currentPos / data.duration) * 100),
+    //           );
+    //           music_progress_bar.style.width = pct + "%";
+    //           if (music_progress_bar_mobile)
+    //             music_progress_bar_mobile.style.width = pct + "%";
+    //         } else {
+    //           music_progress_bar.style.width = "100%";
+    //           music_progress_bar.classList.add("animate-pulse");
+    //           if (music_progress_bar_mobile) {
+    //             music_progress_bar_mobile.style.width = "100%";
+    //             music_progress_bar_mobile.classList.add("animate-pulse");
+    //           }
+    //         }
+    //       };
+    //       updateProgressBar();
+    //       if (data.status === "Playing")
+    //         musicProgressInterval = setInterval(updateProgressBar, 1000);
+    //     } else {
+    //       music_progress_container.classList.add("hidden");
+    //       if (music_progress_container_mobile)
+    //         music_progress_container_mobile.classList.add("hidden");
+    //     }
+
+    //     music_card.classList.remove("hidden");
+    //     music_card.classList.add("flex");
+    //     if (music_card_mobile) {
+    //       music_card_mobile.classList.remove("hidden");
+    //       music_card_mobile.classList.add("flex");
+    //     }
+    //   } else {
+    //     music_card.classList.add("hidden");
+    //     music_card.classList.remove("flex");
+    //     if (music_card_mobile) {
+    //       music_card_mobile.classList.add("hidden");
+    //       music_card_mobile.classList.remove("flex");
+    //     }
+    //   }
+    // };
+
+    // const connectMediaWebSocket = () => {
+    //   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    //   const ws = new WebSocket(
+    //     `${protocol}//${window.location.host}/api/playing/ws`,
+    //   );
+    //   ws.onmessage = (e) => {
+    //     try {
+    //       renderMusicCard(JSON.parse(e.data));
+    //     } catch (err) {
+    //       console.error(err);
+    //     }
+    //   };
+    //   ws.onclose = () => setTimeout(connectMediaWebSocket, 5000);
+    //   ws.onerror = (err) => {
+    //     console.error(err);
+    //     ws.close();
+    //   };
+    // };
+
+    // const openModal = () => {
+    //   qr_modal.classList.remove("hidden");
+    //   qr_modal.classList.add("grid");
+    // };
+
+    // show_modal.addEventListener("click", openModal);
+    // if (show_modal_mobile)
+    //   show_modal_mobile.addEventListener("click", openModal);
+
+    // close_modal.addEventListener("click", () => {
+    //   qr_modal.classList.remove("grid");
+    //   qr_modal.classList.add("hidden");
+    // });
+
+    // show_fullscreen.addEventListener("click", toggleFullscreen);
+    // if (show_fullscreen_mobile)
+    //   show_fullscreen_mobile.addEventListener("click", toggleFullscreen);
+
+    // music_prev_btn.addEventListener("click", () => sendMediaCommand("prev"));
+    // music_play_btn.addEventListener("click", () => sendMediaCommand("play"));
+    // music_next_btn.addEventListener("click", () => sendMediaCommand("next"));
+    // if (music_prev_btn_mobile)
+    //   music_prev_btn_mobile.addEventListener("click", () =>
+    //     sendMediaCommand("prev"),
+    //   );
+    // if (music_next_btn_mobile)
+    //   music_next_btn_mobile.addEventListener("click", () =>
+    //     sendMediaCommand("next"),
+    //   );
+
+    // Load Functions
+    // loadQrCode();
+    // loadKeyBoardShortcuts();
+    // updateTime();
+    // updateGreeting();
+    updateWeatherConditions();
+    // connectMediaWebSocket();
+    // setInterval(() => updateTime(), 1000);
+  });
+</script>
 {% endblock %}

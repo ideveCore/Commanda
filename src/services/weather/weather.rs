@@ -53,8 +53,8 @@ pub struct WeatherData {
     region: String,
     country: String,
     temperature: f64,
-    wind_speed: f64,
-    weather_condition: String,
+    windspeed: f64,
+    weathercondition: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -118,8 +118,8 @@ impl WeatherService {
             region: loc.region,
             country: loc.country,
             temperature: data.current_weather.temperature,
-            wind_speed: data.current_weather.windspeed,
-            weather_condition: Self::get_weather_condition(data.current_weather.weathercode),
+            windspeed: data.current_weather.windspeed,
+            weathercondition: Self::get_weather_condition(data.current_weather.weathercode),
         };
 
         *cache = Some(WeatherCache {
