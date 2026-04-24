@@ -1,0 +1,7 @@
+/* Garante que os cards desktop nunca apareçam em mobile */
+@media (max-width: 1023px) {
+    #weather-card,
+    #music-card {
+        display: none !important;
+    }
+}

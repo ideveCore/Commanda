@@ -28,7 +28,7 @@ use axum::{
 
 use crate::{
     server::SharedState,
-    services::{wallpaper::WallpaperService, weather::WeatherService},
+    services::{user::SystemUserService, wallpaper::WallpaperService, weather::WeatherService},
 };
 use serde_json::{json, Value};
 
@@ -44,11 +44,18 @@ impl FromRef<SharedState> for WeatherService {
     }
 }
 
+impl FromRef<SharedState> for SystemUserService {
+    fn from_ref(state: &SharedState) -> Self {
+        state.system_user.clone()
+    }
+}
+
 pub fn router() -> Router<SharedState> {
     Router::new()
         .route("/api/status", get(status))
         .route("/api/wallpaper", get(wallpaper))
         .route("/api/weather", get(weather))
+        .route("/api/system_user", get(system_user))
 }
 
 async fn status(State(_state): State<SharedState>) -> Json<Value> {
@@ -73,6 +80,13 @@ async fn wallpaper(State(svc): State<WallpaperService>) -> impl IntoResponse {
 
 async fn weather(State(svc): State<WeatherService>) -> impl IntoResponse {
     match svc.get_weather().await {
+        Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn system_user(State(svc): State<SystemUserService>) -> impl IntoResponse {
+    match svc.get_current_user().await {
         Ok(data) => (StatusCode::OK, Json(data)).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }

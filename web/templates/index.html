@@ -50,13 +50,6 @@
           <i class="fa-solid fa-house text-xl"></i>
         </a>
         <a
-          class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-11 h-11 transition-colors duration-300 focus:outline-none border-none outline-none"
-          href="/settings"
-          title="Configurações (Ctrl+.)"
-        >
-          <i class="fa-solid fa-gear text-xl"></i>
-        </a>
-        <a
           id="show_fullscreen_mobile"
           class="flex items-center justify-center text-white/90 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-11 h-11 transition-colors duration-300 focus:outline-none border-none outline-none"
           title="Tela cheia"
@@ -249,13 +242,6 @@
             </p>
           </div>
         </div>
-        <a
-          class="flex items-center justify-center text-white/70 bg-transparent hover:bg-white/10 hover:text-white rounded-full p-2 w-10 h-10 transition-colors duration-300 focus:outline-none border-none outline-none"
-          title="Mudar localização"
-          href="/settings#location_section"
-        >
-          <i class="fa-solid fa-location-dot text-lg"></i>
-        </a>
       </div>
     </div>
 
@@ -349,13 +335,13 @@
     // const show_modal_mobile = document.querySelector("#show-modal-mobile");
     // const close_modal = document.querySelector("#close-modal");
     // const qrcode_img = document.querySelector("#qrcode-img");
-    // const show_fullscreen = document.querySelector("#show_fullscreen");
-    // const show_fullscreen_mobile = document.querySelector(
-    //   "#show_fullscreen_mobile",
-    // );
-    // const clock = document.querySelector("#clock");
-    // const date = document.querySelector("#date");
-    // const greeting = document.querySelector("#greeting");
+    const show_fullscreen = document.querySelector("#show_fullscreen");
+    const show_fullscreen_mobile = document.querySelector(
+      "#show_fullscreen_mobile",
+    );
+    const clock = document.querySelector("#clock");
+    const date = document.querySelector("#date");
+    const greeting = document.querySelector("#greeting");
 
     // Desktop weather elements
     const weather_temp = document.querySelector("#weather-temp");
@@ -422,7 +408,13 @@
 
     // const server_data_element = document.querySelector("#server-data");
     // const config = JSON.parse(JSON.parse(server_data_element.textContent));
-    // const user_name = config.Name;
+    let user_data = {
+      username: "",
+      real_name: "",
+      icon_file: "",
+      account_type: "",
+      uid: "",
+    };
     // let musicProgressInterval;
 
     // const loadQrCode = async () => {
@@ -437,25 +429,25 @@
     //   }
     // };
 
-    // const toggleFullscreen = (event) => {
-    //   if (document.fullscreenElement) {
-    //     document.exitFullscreen();
-    //     show_fullscreen.innerHTML =
-    //       "<i class="fa-solid fa-expand text-2xl"></i>";
-    //     if (show_fullscreen_mobile)
-    //       show_fullscreen_mobile.innerHTML =
-    //         "<i class="fa-solid fa-expand text-xl"></i>";
-    //   } else {
-    //     show_fullscreen.innerHTML =
-    //       "<i class="fa-solid fa-compress text-2xl"></i>";
-    //     if (show_fullscreen_mobile)
-    //       show_fullscreen_mobile.innerHTML =
-    //         "<i class="fa-solid fa-compress text-xl"></i>";
-    //     document.documentElement.requestFullscreen();
-    //   }
+    const toggleFullscreen = (event) => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        show_fullscreen.innerHTML =
+          '<i class="fa-solid fa-expand text-2xl"></i>';
+        if (show_fullscreen_mobile)
+          show_fullscreen_mobile.innerHTML =
+            '<i class="fa-solid fa-expand text-xl"></i>';
+      } else {
+        show_fullscreen.innerHTML =
+          '<i class="fa-solid fa-compress text-2xl"></i>';
+        if (show_fullscreen_mobile)
+          show_fullscreen_mobile.innerHTML =
+            '<i class="fa-solid fa-compress text-xl"></i>';
+        document.documentElement.requestFullscreen();
+      }
 
-    //   void event;
-    // };
+      void event;
+    };
 
     // const loadKeyBoardShortcuts = () => {
     //   const shortcuts = new KeyboardShortcutManager();
@@ -468,29 +460,42 @@
     //   });
     // };
 
-    // const updateTime = () => {
-    //   const now = new Date();
-    //   clock.innerText = now.toLocaleTimeString("pt-BR", {
-    //     hour: "2-digit",
-    //     minute: "2-digit",
-    //   });
-    //   let dateStr = now.toLocaleDateString("pt-BR", {
-    //     weekday: "long",
-    //     year: "numeric",
-    //     month: "long",
-    //     day: "numeric",
-    //   });
-    //   date.innerText = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-    // };
+    const updateTime = () => {
+      const now = new Date();
+      clock.innerText = now.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      let dateStr = now.toLocaleDateString("pt-BR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      date.innerText = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+    };
 
-    // const updateGreeting = () => {
-    //   const hour = new Date().getHours();
-    //   let greeter = "Boa noite";
-    //   if (hour >= 5 && hour < 12) greeter = "Bom dia";
-    //   else if (hour >= 12 && hour < 18) greeter = "Boa tarde";
-    //   greeting.innerText = user_name ? `${greeter}, ${user_name}` : greeter;
-    //   greeting.classList.remove("opacity-0");
-    // };
+    const updateGreeting = () => {
+      const hour = new Date().getHours();
+      let greeter = "Boa noite";
+      if (hour >= 5 && hour < 12) greeter = "Bom dia";
+      else if (hour >= 12 && hour < 18) greeter = "Boa tarde";
+      greeting.innerText = user_data.real_name
+        ? `${greeter}, ${user_data.real_name}`
+        : greeter;
+      greeting.classList.remove("opacity-0");
+    };
+
+    const getSystemUser = async () => {
+      const requests = new Requests({ url: "/api/system_user" });
+      try {
+        user_data = await requests.get();
+        updateTime();
+        updateGreeting();
+      } catch (e) {
+        console.error("Error fetch system user:", e);
+      }
+    };
 
     const updateWeatherConditions = async () => {
       try {
@@ -697,9 +702,9 @@
     //   qr_modal.classList.add("hidden");
     // });
 
-    // show_fullscreen.addEventListener("click", toggleFullscreen);
-    // if (show_fullscreen_mobile)
-    //   show_fullscreen_mobile.addEventListener("click", toggleFullscreen);
+    show_fullscreen.addEventListener("click", toggleFullscreen);
+    if (show_fullscreen_mobile)
+      show_fullscreen_mobile.addEventListener("click", toggleFullscreen);
 
     // music_prev_btn.addEventListener("click", () => sendMediaCommand("prev"));
     // music_play_btn.addEventListener("click", () => sendMediaCommand("play"));
@@ -716,11 +721,10 @@
     // Load Functions
     // loadQrCode();
     // loadKeyBoardShortcuts();
-    // updateTime();
-    // updateGreeting();
+    getSystemUser();
     updateWeatherConditions();
     // connectMediaWebSocket();
-    // setInterval(() => updateTime(), 1000);
+    setInterval(() => updateTime(), 1000);
   });
 </script>
 {% endblock %}

@@ -10,7 +10,8 @@
     "--share=ipc",
     "--socket=fallback-x11",
     "--device=dri",
-    "--socket=wayland"
+    "--socket=wayland",
+    "--system-talk-name=org.freedesktop.Accounts"
   ],
   "build-options": {
     "append-path": "/usr/lib/sdk/rust-stable/bin",
@@ -19,7 +20,8 @@
       "--share=ipc",
       "--socket=fallback-x11",
       "--device=dri",
-      "--socket=wayland"
+      "--socket=wayland",
+      "--system-talk-name=org.freedesktop.Accounts"
     ],
     "env": {
       "RUST_BACKTRACE": "1",

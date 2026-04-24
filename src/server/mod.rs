@@ -20,7 +20,9 @@
 
 pub mod routes;
 
-use crate::services::{wallpaper::WallpaperService, weather::WeatherService};
+use crate::services::{
+    user::SystemUserService, wallpaper::WallpaperService, weather::WeatherService,
+};
 use axum::Router;
 use gtk::gio;
 use gtk::gio::prelude::*;
@@ -44,6 +46,7 @@ pub struct AppState {
     pub weather: WeatherService,
     pub template_env: Arc<Environment<'static>>,
     pub settings: Arc<RwLock<SettingsCache>>,
+    pub system_user: SystemUserService,
 }
 
 #[derive(Clone)]
@@ -85,6 +88,7 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
         weather: WeatherService::new(Arc::clone(&settings_cache)),
         template_env: Arc::new(create_template_env()),
         settings: settings_cache,
+        system_user: SystemUserService::new(),
     });
 
     let state_for_signal = Arc::clone(&state);

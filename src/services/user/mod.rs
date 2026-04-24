@@ -19,5 +19,5 @@
  */
 
 pub mod user;
-pub mod wallpaper;
-pub mod weather;
+
+pub use user::SystemUserService;
