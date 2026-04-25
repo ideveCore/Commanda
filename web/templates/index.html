@@ -338,6 +338,7 @@
 <script type="module">
   "use strict";
   import { Requests } from "../js/requests.js";
+  import { KeyboardShortcutManager } from "../js/keyboardShortcutsManager.js";
   import { weather_conditions, format_number } from "../js/utils.js";
 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -368,53 +369,51 @@
     const weather_card_mobile = document.querySelector("#weather-card-mobile");
 
     // Desktop music elements
-    // const music_prev_btn = document.querySelector("#music-prev-btn");
-    // const music_play_btn = document.querySelector("#music-play-btn");
-    // const music_next_btn = document.querySelector("#music-next-btn");
-    // const music_title = document.querySelector("#music-title");
-    // const music_artist = document.querySelector("#music-artist");
-    // const music_player_name = document.querySelector("#music-player-name");
-    // const music_art = document.querySelector("#music-art");
-    // const music_art_fallback = document.querySelector("#music-art-fallback");
-    // const music_status_icon = document.querySelector("#music-status-icon");
-    // const music_progress_container = document.querySelector(
-    //   "#music-progress-container",
-    // );
-    // const music_progress_bar = document.querySelector("#music-progress-bar");
-    // const music_card = document.querySelector("#music-card");
+    const music_prev_btn = document.querySelector("#music-prev-btn");
+    const music_play_btn = document.querySelector("#music-play-btn");
+    const music_next_btn = document.querySelector("#music-next-btn");
+    const music_title = document.querySelector("#music-title");
+    const music_artist = document.querySelector("#music-artist");
+    const music_player_name = document.querySelector("#music-player-name");
+    const music_art = document.querySelector("#music-art");
+    const music_art_fallback = document.querySelector("#music-art-fallback");
+    const music_status_icon = document.querySelector("#music-status-icon");
+    const music_progress_container = document.querySelector(
+      "#music-progress-container",
+    );
+    const music_progress_bar = document.querySelector("#music-progress-bar");
+    const music_card = document.querySelector("#music-card");
 
     // Mobile music elements
-    // const music_prev_btn_mobile = document.querySelector(
-    //   "#music-prev-btn-mobile",
-    // );
-    // const music_play_btn_mobile = document.querySelector(
-    //   "#music-play-btn-mobile",
-    // );
-    // const music_next_btn_mobile = document.querySelector(
-    //   "#music-next-btn-mobile",
-    // );
-    // const music_title_mobile = document.querySelector("#music-title-mobile");
-    // const music_artist_mobile = document.querySelector("#music-artist-mobile");
-    // const music_player_name_mobile = document.querySelector(
-    //   "#music-player-name-mobile",
-    // );
-    // const music_art_mobile = document.querySelector("#music-art-mobile");
-    // const music_art_fallback_mobile = document.querySelector(
-    //   "#music-art-fallback-mobile",
-    // );
-    // const music_status_icon_mobile = document.querySelector(
-    //   "#music-status-icon-mobile",
-    // );
-    // const music_progress_container_mobile = document.querySelector(
-    //   "#music-progress-container-mobile",
-    // );
-    // const music_progress_bar_mobile = document.querySelector(
-    //   "#music-progress-bar-mobile",
-    // );
-    // const music_card_mobile = document.querySelector("#music-card-mobile");
+    const music_prev_btn_mobile = document.querySelector(
+      "#music-prev-btn-mobile",
+    );
+    const music_play_btn_mobile = document.querySelector(
+      "#music-play-btn-mobile",
+    );
+    const music_next_btn_mobile = document.querySelector(
+      "#music-next-btn-mobile",
+    );
+    const music_title_mobile = document.querySelector("#music-title-mobile");
+    const music_artist_mobile = document.querySelector("#music-artist-mobile");
+    const music_player_name_mobile = document.querySelector(
+      "#music-player-name-mobile",
+    );
+    const music_art_mobile = document.querySelector("#music-art-mobile");
+    const music_art_fallback_mobile = document.querySelector(
+      "#music-art-fallback-mobile",
+    );
+    const music_status_icon_mobile = document.querySelector(
+      "#music-status-icon-mobile",
+    );
+    const music_progress_container_mobile = document.querySelector(
+      "#music-progress-container-mobile",
+    );
+    const music_progress_bar_mobile = document.querySelector(
+      "#music-progress-bar-mobile",
+    );
+    const music_card_mobile = document.querySelector("#music-card-mobile");
 
-    // const server_data_element = document.querySelector("#server-data");
-    // const config = JSON.parse(JSON.parse(server_data_element.textContent));
     let user_data = {
       username: "",
       real_name: "",
@@ -422,7 +421,39 @@
       account_type: "",
       uid: "",
     };
-    // let musicProgressInterval;
+    let musicProgressInterval;
+
+    const mediaWebSocket = {
+      ws: null,
+      /*
+       * Connect to media WebSocket
+       */
+      connect() {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        this.ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        this.ws.onmessage = (e) => {
+          try {
+            renderMusicCard(JSON.parse(e.data));
+          } catch (err) {
+            console.error(err);
+          }
+        };
+        this.ws.onclose = () => setTimeout(() => this.connect(), 5000);
+        this.ws.onerror = (err) => {
+          console.error(err);
+          this.ws.close();
+        };
+      },
+      /*
+       * Send message to media WebSocket
+       * @param {string} message
+       */
+      sendMessage(message) {
+        if (message) {
+          this.ws.send(message);
+        }
+      },
+    };
 
     const loadQrCode = async () => {
       try {
@@ -456,16 +487,16 @@
       void event;
     };
 
-    // const loadKeyBoardShortcuts = () => {
-    //   const shortcuts = new KeyboardShortcutManager();
+    const loadKeyBoardShortcuts = () => {
+      const shortcuts = new KeyboardShortcutManager();
 
-    //   shortcuts.addShortcut(" ", () => {
-    //     window.location.href = "/home";
-    //   });
-    //   shortcuts.addCtrlShortcut(".", () => {
-    //     window.location.href = "/settings";
-    //   });
-    // };
+      shortcuts.addShortcut(" ", () => {
+        window.location.href = "/home";
+      });
+      shortcuts.addCtrlShortcut(".", () => {
+        window.location.href = "/settings";
+      });
+    };
 
     const updateTime = () => {
       const now = new Date();
@@ -542,195 +573,169 @@
       }
     };
 
-    // Media controls
-    // const sendMediaCommand = async (command) => {
-    //   try {
-    //     const requests = new Requests({ url: "/api/playing/command" });
-    //     await requests.post({ command });
-    //   } catch (e) {
-    //     console.error("Erro ao enviar comando de mídia:", e);
-    //   }
-    // };
+    const renderMusicCard = async (data) => {
+      if (data && (data.status === "Playing" || data.status === "Paused")) {
+        const titleStr = data.title || "Desconhecido";
+        const artistStr = data.artist || "Desconhecido";
+        const playerStr = data.player || "Player";
 
-    // const renderMusicCard = (data) => {
-    //   if (data && (data.status === "Playing" || data.status === "Paused")) {
-    //     const titleStr = data.title || "Desconhecido";
-    //     const artistStr = data.artist || "Desconhecido";
-    //     const playerStr = data.player || "Player";
+        // Desktop
+        music_title.innerText = titleStr;
+        music_artist.innerText = artistStr;
+        music_player_name.innerText = playerStr;
 
-    //     // Desktop
-    //     music_title.innerText = titleStr;
-    //     music_artist.innerText = artistStr;
-    //     music_player_name.innerText = playerStr;
+        // Mobile
+        if (music_title_mobile) music_title_mobile.innerText = titleStr;
+        if (music_artist_mobile) music_artist_mobile.innerText = artistStr;
+        if (music_player_name_mobile)
+          music_player_name_mobile.innerText = playerStr;
 
-    //     // Mobile
-    //     if (music_title_mobile) music_title_mobile.innerText = titleStr;
-    //     if (music_artist_mobile) music_artist_mobile.innerText = artistStr;
-    //     if (music_player_name_mobile)
-    //       music_player_name_mobile.innerText = playerStr;
+        if (data.art_url) {
+          const requests = new Requests({ url: data.art_url });
+          try {
+            const response = await requests.get();
+            if (response && response.image) {
+              music_art.src = `data:image/png;base64,${response.image}`;
+              music_art.classList.remove("hidden");
+              music_art_fallback.classList.add("hidden");
+              music_art_mobile.src = `data:image/png;base64,${response.image}`;
+              music_art_mobile.classList.remove("hidden");
+              if (music_art_fallback_mobile)
+                music_art_fallback_mobile.classList.add("hidden");
+            } else {
+              throw new Error("Invalid response");
+            }
+          } catch (e) {
+            console.error("Error fetch system user:", e);
+          }
+        } else {
+          music_art.setAttribute("src", "");
+          music_art.classList.add("hidden");
+          music_art_fallback.classList.remove("hidden");
+          if (music_art_mobile) {
+            music_art_mobile.setAttribute("src", "");
+            music_art_mobile.classList.add("hidden");
+          }
+          if (music_art_fallback_mobile)
+            music_art_fallback_mobile.classList.remove("hidden");
+        }
 
-    //     if (data.art_url) {
-    //       if (music_art.getAttribute("src") !== data.art_url) {
-    //         music_art.setAttribute("src", data.art_url);
-    //         music_art.classList.remove("hidden");
-    //         music_art_fallback.classList.add("hidden");
-    //       }
-    //       if (
-    //         music_art_mobile &&
-    //         music_art_mobile.getAttribute("src") !== data.art_url
-    //       ) {
-    //         music_art_mobile.setAttribute("src", data.art_url);
-    //         music_art_mobile.classList.remove("hidden");
-    //         if (music_art_fallback_mobile)
-    //           music_art_fallback_mobile.classList.add("hidden");
-    //       }
-    //     } else {
-    //       music_art.setAttribute("src", "");
-    //       music_art.classList.add("hidden");
-    //       music_art_fallback.classList.remove("hidden");
-    //       if (music_art_mobile) {
-    //         music_art_mobile.setAttribute("src", "");
-    //         music_art_mobile.classList.add("hidden");
-    //       }
-    //       if (music_art_fallback_mobile)
-    //         music_art_fallback_mobile.classList.remove("hidden");
-    //     }
+        if (data.status === "Playing") {
+          music_status_icon.className =
+            "fa-solid fa-pause text-[10px] text-white/70";
+          music_play_btn.innerHTML =
+            '<i class="fa-solid fa-pause text-sm"></i>';
+          music_play_btn.onclick = () => mediaWebSocket.sendMessage("pause");
+          if (music_status_icon_mobile)
+            music_status_icon_mobile.className =
+              "fa-solid fa-pause text-[9px] text-white/70";
+          if (music_play_btn_mobile) {
+            music_play_btn_mobile.innerHTML =
+              '<i class="fa-solid fa-pause text-xs"></i>';
+            music_play_btn_mobile.onclick = () =>
+              mediaWebSocket.sendMessage("pause");
+          }
+        } else {
+          music_status_icon.className =
+            "fa-solid fa-play text-[10px] text-white/70";
+          music_play_btn.innerHTML =
+            '<i class="fa-solid fa-play text-sm translate-x-[1px]"></i>';
+          music_play_btn.onclick = () => mediaWebSocket.sendMessage("play");
+          if (music_status_icon_mobile)
+            music_status_icon_mobile.className =
+              "fa-solid fa-play text-[9px] text-white/70";
+          if (music_play_btn_mobile) {
+            music_play_btn_mobile.innerHTML =
+              '<i class="fa-solid fa-play text-xs translate-x-[1px]"></i>';
+            music_play_btn_mobile.onclick = () =>
+              mediaWebSocket.sendMessage("play");
+          }
+        }
 
-    //     if (data.status === "Playing") {
-    //       music_status_icon.className = "fa-solid fa-pause text-[10px] text-white/70";
-    //       music_play_btn.innerHTML =
-    //         '<i class="fa-solid fa-pause text-sm"></i>';
-    //       music_play_btn.onclick = () => sendMediaCommand("pause");
-    //       if (music_status_icon_mobile) music_status_icon_mobile.className = "fa-solid fa-pause text-[9px] text-white/70";
-    //       if (music_play_btn_mobile) {
-    //         music_play_btn_mobile.innerHTML =
-    //           '<i class="fa-solid fa-pause text-xs"></i>';
-    //         music_play_btn_mobile.onclick = () => sendMediaCommand("pause");
-    //       }
-    //     } else {
-    //       music_status_icon.className = "fa-solid fa-play text-[10px] text-white/70";
-    //       music_play_btn.innerHTML =
-    //         '<i class="fa-solid fa-play text-sm translate-x-[1px]"></i>';
-    //       music_play_btn.onclick = () => sendMediaCommand("play");
-    //       if (music_status_icon_mobile) music_status_icon_mobile.className = "fa-solid fa-play text-[9px] text-white/70";
-    //       if (music_play_btn_mobile) {
-    //         music_play_btn_mobile.innerHTML =
-    //           '<i class="fa-solid fa-play text-xs translate-x-[1px]"></i>';
-    //         music_play_btn_mobile.onclick = () => sendMediaCommand("play");
-    //       }
-    //     }
+        if (musicProgressInterval) clearInterval(musicProgressInterval);
 
-    //     if (musicProgressInterval) clearInterval(musicProgressInterval);
+        if (
+          data.duration > 0 ||
+          (data.position > 0 && data.status === "Playing")
+        ) {
+          music_progress_container.classList.remove("hidden");
+          if (music_progress_container_mobile)
+            music_progress_container_mobile.classList.remove("hidden");
+          const updateProgressBar = () => {
+            let currentPos = data.position;
+            if (data.status === "Playing" && data.fetched_at) {
+              currentPos += (Date.now() - data.fetched_at) * 1000 * data.rate;
+            }
+            if (data.duration > 0) {
+              let pct = Math.min(
+                100,
+                Math.max(0, (currentPos / data.duration) * 100),
+              );
+              music_progress_bar.style.width = pct + "%";
+              if (music_progress_bar_mobile)
+                music_progress_bar_mobile.style.width = pct + "%";
+            } else {
+              music_progress_bar.style.width = "100%";
+              music_progress_bar.classList.add("animate-pulse");
+              if (music_progress_bar_mobile) {
+                music_progress_bar_mobile.style.width = "100%";
+                music_progress_bar_mobile.classList.add("animate-pulse");
+              }
+            }
+          };
+          updateProgressBar();
+          if (data.status === "Playing")
+            musicProgressInterval = setInterval(updateProgressBar, 1000);
+        } else {
+          music_progress_container.classList.add("hidden");
+          if (music_progress_container_mobile)
+            music_progress_container_mobile.classList.add("hidden");
+        }
 
-    //     if (
-    //       data.duration > 0 ||
-    //       (data.position > 0 && data.status === "Playing")
-    //     ) {
-    //       music_progress_container.classList.remove("hidden");
-    //       if (music_progress_container_mobile)
-    //         music_progress_container_mobile.classList.remove("hidden");
-    //       const updateProgressBar = () => {
-    //         let currentPos = data.position;
-    //         if (data.status === "Playing" && data.fetched_at) {
-    //           currentPos += (Date.now() - data.fetched_at) * 1000 * data.rate;
-    //         }
-    //         if (data.duration > 0) {
-    //           let pct = Math.min(
-    //             100,
-    //             Math.max(0, (currentPos / data.duration) * 100),
-    //           );
-    //           music_progress_bar.style.width = pct + "%";
-    //           if (music_progress_bar_mobile)
-    //             music_progress_bar_mobile.style.width = pct + "%";
-    //         } else {
-    //           music_progress_bar.style.width = "100%";
-    //           music_progress_bar.classList.add("animate-pulse");
-    //           if (music_progress_bar_mobile) {
-    //             music_progress_bar_mobile.style.width = "100%";
-    //             music_progress_bar_mobile.classList.add("animate-pulse");
-    //           }
-    //         }
-    //       };
-    //       updateProgressBar();
-    //       if (data.status === "Playing")
-    //         musicProgressInterval = setInterval(updateProgressBar, 1000);
-    //     } else {
-    //       music_progress_container.classList.add("hidden");
-    //       if (music_progress_container_mobile)
-    //         music_progress_container_mobile.classList.add("hidden");
-    //     }
-
-    //     music_card.classList.remove("hidden");
-    //     music_card.classList.add("flex");
-    //     if (music_card_mobile) {
-    //       music_card_mobile.classList.remove("hidden");
-    //       music_card_mobile.classList.add("flex");
-    //     }
-    //   } else {
-    //     music_card.classList.add("hidden");
-    //     music_card.classList.remove("flex");
-    //     if (music_card_mobile) {
-    //       music_card_mobile.classList.add("hidden");
-    //       music_card_mobile.classList.remove("flex");
-    //     }
-    //   }
-    // };
-
-    // const connectMediaWebSocket = () => {
-    //   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    //   const ws = new WebSocket(
-    //     `${protocol}//${window.location.host}/api/playing/ws`,
-    //   );
-    //   ws.onmessage = (e) => {
-    //     try {
-    //       renderMusicCard(JSON.parse(e.data));
-    //     } catch (err) {
-    //       console.error(err);
-    //     }
-    //   };
-    //   ws.onclose = () => setTimeout(connectMediaWebSocket, 5000);
-    //   ws.onerror = (err) => {
-    //     console.error(err);
-    //     ws.close();
-    //   };
-    // };
-
-    // const openModal = () => {
-    //   qr_modal.classList.remove("hidden");
-    //   qr_modal.classList.add("grid");
-    // };
-
-    // show_modal.addEventListener("click", openModal);
-    // if (show_modal_mobile)
-    //   show_modal_mobile.addEventListener("click", openModal);
-
-    // close_modal.addEventListener("click", () => {
-    //   qr_modal.classList.remove("grid");
-    //   qr_modal.classList.add("hidden");
-    // });
+        music_card.classList.remove("hidden");
+        music_card.classList.add("flex");
+        if (music_card_mobile) {
+          music_card_mobile.classList.remove("hidden");
+          music_card_mobile.classList.add("flex");
+        }
+      } else {
+        music_card.classList.add("hidden");
+        music_card.classList.remove("flex");
+        if (music_card_mobile) {
+          music_card_mobile.classList.add("hidden");
+          music_card_mobile.classList.remove("flex");
+        }
+      }
+    };
 
     show_fullscreen.addEventListener("click", toggleFullscreen);
     if (show_fullscreen_mobile)
       show_fullscreen_mobile.addEventListener("click", toggleFullscreen);
 
-    // music_prev_btn.addEventListener("click", () => sendMediaCommand("prev"));
-    // music_play_btn.addEventListener("click", () => sendMediaCommand("play"));
-    // music_next_btn.addEventListener("click", () => sendMediaCommand("next"));
-    // if (music_prev_btn_mobile)
-    //   music_prev_btn_mobile.addEventListener("click", () =>
-    //     sendMediaCommand("prev"),
-    //   );
-    // if (music_next_btn_mobile)
-    //   music_next_btn_mobile.addEventListener("click", () =>
-    //     sendMediaCommand("next"),
-    //   );
+    music_prev_btn.addEventListener("click", () =>
+      mediaWebSocket.sendMessage("prev"),
+    );
+    music_play_btn.addEventListener("click", () =>
+      mediaWebSocket.sendMessage("play"),
+    );
+    music_next_btn.addEventListener("click", () =>
+      mediaWebSocket.sendMessage("next"),
+    );
+    if (music_prev_btn_mobile)
+      music_prev_btn_mobile.addEventListener("click", () =>
+        mediaWebSocket.sendMessage("prev"),
+      );
+    if (music_next_btn_mobile)
+      music_next_btn_mobile.addEventListener("click", () =>
+        mediaWebSocket.sendMessage("next"),
+      );
 
-    // Load Functions
+
     loadQrCode();
-    // loadKeyBoardShortcuts();
+    loadKeyBoardShortcuts();
+    mediaWebSocket.connect();
     getSystemUser();
     updateWeatherConditions();
-    // connectMediaWebSocket();
     setInterval(() => updateTime(), 1000);
   });
 </script>

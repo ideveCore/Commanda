@@ -18,6 +18,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+pub mod mpris;
 pub mod qrcode;
 pub mod user;
 pub mod wallpaper;

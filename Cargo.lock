@@ -509,6 +509,7 @@ dependencies = [
  "async-lock",
  "axum",
  "base64",
+ "futures-util",
  "gettext-rs",
  "gtk4",
  "image",

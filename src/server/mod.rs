@@ -118,6 +118,10 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
 }
 
 async fn run_server(port: u16, state: SharedState) {
+    tokio::spawn(crate::services::mpris::MprisService::start_monitor(
+        state.event_tx.clone(),
+    ));
+
     let app = Router::new()
         .merge(routes::all())
         .layer(CorsLayer::permissive())

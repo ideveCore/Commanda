@@ -25,12 +25,13 @@ use axum::{
     routing::get,
     Router,
 };
+use base64::{engine::general_purpose, Engine as _};
 
 use crate::{
     server::SharedState,
     services::{
-        qrcode::QrCodeService, user::SystemUserService, wallpaper::WallpaperService,
-        weather::WeatherService,
+        mpris::MprisService, qrcode::QrCodeService, user::SystemUserService,
+        wallpaper::WallpaperService, weather::WeatherService,
     },
 };
 use serde_json::{json, Value};
@@ -60,6 +61,7 @@ pub fn router() -> Router<SharedState> {
         .route("/api/weather", get(weather))
         .route("/api/system_user", get(system_user))
         .route("/api/qrcode", get(qrcode))
+        .route("/api/playing/art", get(playing_art))
 }
 
 async fn status(State(_state): State<SharedState>) -> Json<Value> {
@@ -102,5 +104,41 @@ async fn qrcode(State(_state): State<SharedState>) -> impl IntoResponse {
     match svc.encode(&_state.server_url).await {
         Ok(data) => (StatusCode::OK, Json(data)).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn playing_art() -> impl IntoResponse {
+    let np = MprisService::get_now_playing().await;
+    if np.art_url.starts_with("file://") {
+        let path = np.art_url.trim_start_matches("file://");
+
+        let mut file_bytes = tokio::fs::read(path).await;
+
+        if file_bytes.is_err() {
+            if let Ok(mut entries) = tokio::fs::read_dir("/proc").await {
+                while let Ok(Some(entry)) = entries.next_entry().await {
+                    let pid = entry.file_name();
+                    if pid.to_string_lossy().chars().all(|c| c.is_ascii_digit()) {
+                        let proc_path = format!("/proc/{}/root{}", pid.to_string_lossy(), path);
+                        if let Ok(bytes) = tokio::fs::read(&proc_path).await {
+                            file_bytes = Ok(bytes);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        match file_bytes {
+            Ok(bytes) => {
+                let data = json!({
+                  "image": general_purpose::STANDARD.encode(bytes),
+                });
+                (StatusCode::OK, Json(data)).into_response()
+            }
+            Err(_) => (StatusCode::NOT_FOUND, "Art not found").into_response(),
+        }
+    } else {
+        (StatusCode::NOT_FOUND, "No local art available").into_response()
     }
 }

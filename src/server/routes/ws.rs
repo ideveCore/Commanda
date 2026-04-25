@@ -27,9 +27,10 @@ use axum::{
     routing::get,
     Router,
 };
+use tracing::info;
 
 use crate::server::SharedState;
-use tracing::info;
+use crate::services::mpris::MprisService;
 
 pub fn router() -> Router<SharedState> {
     Router::new().route("/ws", get(ws_handler))
@@ -41,24 +42,41 @@ async fn ws_handler(ws: WebSocketUpgrade, State(state): State<SharedState>) -> i
 }
 
 async fn handle_socket(mut socket: WebSocket, mut rx: tokio::sync::broadcast::Receiver<String>) {
-    info!("Cliente WS connected");
+    info!("WebSocket connected");
+
+    let mut np = MprisService::get_now_playing().await  ;
+    if np.art_url.starts_with("file://") {
+        np.art_url = "/api/playing/art".into();
+    }
+    if let Ok(json) = serde_json::to_string(&np) {
+        if socket.send(Message::Text(json.into())).await.is_err() {
+            return;
+        }
+    }
 
     loop {
         tokio::select! {
-          Ok(event) = rx.recv() => {
-            if socket.send(Message::Text(event.into())).await.is_err() {
-              break;
+            Ok(event) = rx.recv() => {
+                if socket.send(Message::Text(event.into())).await.is_err() {
+                    break;
+                }
             }
-          }
-          msg = socket.recv() => {
-            match msg {
-              Some(Ok(Message::Text(text))) => {
-                info!("Receive from client: {}", text);
-              }
-              Some(Ok(Message::Close(_))) | None => break,
-              _ => {}
+            msg = socket.recv() => {
+                match msg {
+                    Some(Ok(Message::Text(text))) => {
+                        let cmd = text.trim();
+                        if ["play", "pause", "next", "prev"].contains(&cmd) {
+                            if let Err(e) = MprisService::send_media_command(cmd).await {
+                                tracing::error!("Error while send media command: {}", e);
+                            }
+                        }
+                    }
+                    Some(Ok(Message::Close(_))) | None => break,
+                    _ => {}
+                }
             }
-          }
         }
     }
+
+    info!("WebSocket disconnected");
 }
