@@ -47,6 +47,7 @@ pub struct AppState {
     pub template_env: Arc<Environment<'static>>,
     pub settings: Arc<RwLock<SettingsCache>>,
     pub system_user: SystemUserService,
+    pub server_url: String,
 }
 
 #[derive(Clone)]
@@ -81,6 +82,9 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
     let (tx, _) = broadcast::channel::<String>(32);
     let settings = gio::Settings::new(&format!("{}.Weather", app_id));
     let settings_cache = Arc::new(RwLock::new(SettingsCache::from_settings(&settings)));
+    let local_ip = local_ip_address::local_ip()
+        .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)));
+    let server_url = format!("http://{}:{}", local_ip, port);
 
     let state = Arc::new(AppState {
         event_tx: tx,
@@ -89,6 +93,7 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
         template_env: Arc::new(create_template_env()),
         settings: settings_cache,
         system_user: SystemUserService::new(),
+        server_url,
     });
 
     let state_for_signal = Arc::clone(&state);

@@ -28,7 +28,10 @@ use axum::{
 
 use crate::{
     server::SharedState,
-    services::{user::SystemUserService, wallpaper::WallpaperService, weather::WeatherService},
+    services::{
+        qrcode::QrCodeService, user::SystemUserService, wallpaper::WallpaperService,
+        weather::WeatherService,
+    },
 };
 use serde_json::{json, Value};
 
@@ -56,6 +59,7 @@ pub fn router() -> Router<SharedState> {
         .route("/api/wallpaper", get(wallpaper))
         .route("/api/weather", get(weather))
         .route("/api/system_user", get(system_user))
+        .route("/api/qrcode", get(qrcode))
 }
 
 async fn status(State(_state): State<SharedState>) -> Json<Value> {
@@ -87,6 +91,15 @@ async fn weather(State(svc): State<WeatherService>) -> impl IntoResponse {
 
 async fn system_user(State(svc): State<SystemUserService>) -> impl IntoResponse {
     match svc.get_current_user().await {
+        Ok(data) => (StatusCode::OK, Json(data)).into_response(),
+        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+    }
+}
+
+async fn qrcode(State(_state): State<SharedState>) -> impl IntoResponse {
+    let svc = QrCodeService::new();
+
+    match svc.encode(&_state.server_url).await {
         Ok(data) => (StatusCode::OK, Json(data)).into_response(),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }

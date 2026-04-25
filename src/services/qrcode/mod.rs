@@ -17,8 +17,6 @@
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
-
 pub mod qrcode;
-pub mod user;
-pub mod wallpaper;
-pub mod weather;
+
+pub use qrcode::QrCodeService;
