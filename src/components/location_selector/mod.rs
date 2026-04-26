@@ -18,7 +18,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-pub mod home;
-pub mod location_row;
 pub mod location_selector;
-pub mod preferences;
+
+pub use location_selector::LocationSelector;

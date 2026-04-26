@@ -39,8 +39,9 @@ use tracing::info;
 #[folder = "web/"]
 pub struct WebAssets;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct AppState {
+    pub runtime_handle: tokio::runtime::Handle,
     pub event_tx: broadcast::Sender<String>,
     pub wallpaper: WallpaperService,
     pub weather: WeatherService,
@@ -50,7 +51,7 @@ pub struct AppState {
     pub server_url: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SettingsCache {
     pub use_ip_location: bool,
     pub location: String,
@@ -86,7 +87,11 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
         .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)));
     let server_url = format!("http://{}:{}", local_ip, port);
 
+    let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
+    let handle = rt.handle().clone();
+
     let state = Arc::new(AppState {
+        runtime_handle: handle,
         event_tx: tx,
         wallpaper: WallpaperService::new(),
         weather: WeatherService::new(Arc::clone(&settings_cache)),
@@ -100,6 +105,7 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
 
     settings.connect_changed(None, move |s, key| {
         tracing::debug!("Setting changed: {}", key);
+        println!("Setting changed: {}", key);
 
         if let Ok(mut cache) = state_for_signal.settings.write() {
             *cache = SettingsCache::from_settings(s);
@@ -109,9 +115,7 @@ pub fn spawn_server(port: u16, app_id: &str) -> SharedState {
     let state_for_server = Arc::clone(&state);
 
     std::thread::spawn(move || {
-        tokio::runtime::Runtime::new()
-            .expect("Falha ao criar runtime Tokio")
-            .block_on(run_server(port, state_for_server));
+        rt.block_on(run_server(port, state_for_server));
     });
 
     state

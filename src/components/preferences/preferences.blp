@@ -1,7 +1,7 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $Preferences : Adw.PreferencesDialog {
+template $Preferences: Adw.PreferencesDialog {
   content-width: 800;
   content-height: 600;
   title: _("Preferences");
@@ -49,83 +49,28 @@ template $Preferences : Adw.PreferencesDialog {
   }
 
   Adw.PreferencesPage {
-    title: _("Behavior");
+    title: _("Web");
     icon-name: "settings-symbolic";
 
     Adw.PreferencesGroup {
-      title: _("Interaction Settings");
-      description: _("Change how the app behaves during user interaction");
-      // Adw.PreferencesGroup can have suffix widgets like Adw.ActionRows
+      title: _("Location Settings");
+      description: _("Change the location the app uses to display prices");
 
-      [header-suffix]
-      Button {
-        halign: center;
-        valign: center;
-        icon-name: "settings-symbolic";
-      }
-
-      Adw.SwitchRow {
-        title: _("Run on Startup");
+      Adw.SwitchRow ip_location_switch {
+        title: _("Use IP-based location");
       }
 
       Adw.ActionRow {
-        title: _("Show Toast");
-        activatable-widget: toast_button;
+        title: _("City");
+        activatable-widget: location_selector;
 
         [suffix]
-        Button toast_button {
-          halign: center;
-          valign: center;
-          label: _("show toast");
-          icon-name: "bread-symbolic";
+        Gtk.Box {
+          orientation: horizontal;
+
+          $LocationSelector location_selector {}
         }
       }
-    }
-
-    Adw.PreferencesGroup {
-      title: _("Data Settings");
-      description: _("Manage user data related settings");
-
-      Adw.SwitchRow {
-        title: _("Enable Debug");
-      }
-
-      Adw.SwitchRow {
-        title: _("Check for updates");
-      }
-
-      Adw.ActionRow subpage_row {
-        title: _("Additional Preferences");
-        activatable: true;
-
-        [suffix]
-        Gtk.Image {
-          icon-name: "go-next-symbolic";
-
-          styles [
-            "dim-label",
-          ]
-        }
-      }
-    }
-  }
-}
-
-Adw.NavigationPage subpage {
-  title: bind subpage_row.title;
-
-  Adw.StatusPage {
-    description: _("Custom Subpage");
-
-    Gtk.Button subpage_button {
-      label: _("Go back");
-      halign: center;
-      valign: center;
-
-      styles [
-        "suggested-action",
-        "pill",
-      ]
     }
   }
 }

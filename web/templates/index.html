@@ -1,12 +1,14 @@
 {% extends "base.html" %} {% block content %}
 <section
-  class="relative z-10 flex flex-col items-center justify-center min-h-screen text-white drop-shadow-2xl"
+  class="relative z-10 flex flex-col items-center justify-center min-h-screen w-full text-white"
 >
-  <dialog id="my_modal_1" class="modal">
-    <div class="modal-box">
+  <dialog id="my_modal_1" class="modal backdrop-blur-sm">
+    <div
+      class="modal-box bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-2xl"
+    >
       <form method="dialog">
         <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-          ✕
+          <i class="fa-solid fa-xmark"></i>
         </button>
       </form>
       <div class="flex flex-col items-center">
@@ -19,15 +21,13 @@
     </div>
   </dialog>
   <!-- ===== LAYOUT WRAPPER ===== -->
-  <div
-    class="relative z-10 min-h-screen text-white drop-shadow-2xl flex flex-col"
-  >
+  <div class="relative z-10 min-h-screen w-full text-white flex flex-col">
     <!-- TOP BAR (mobile): weather + nav buttons -->
     <div class="flex items-start justify-between p-3 lg:hidden">
       <!-- Weather card inline (mobile) -->
       <div
         id="weather-card-mobile"
-        class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-3 hidden w-auto max-w-[200px]"
+        class="bg-white/10 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-3 hidden w-auto max-w-[200px]"
       >
         <div class="flex items-center gap-2">
           <i
@@ -87,19 +87,19 @@
     <div class="flex-1 flex flex-col items-center justify-center px-4">
       <h2
         id="greeting"
-        class="text-lg lg:text-5xl font-semibold mb-3 lg:mb-6 text-white/95 tracking-wide drop-shadow-lg opacity-0 transition-opacity duration-1000"
+        class="text-2xl lg:text-4xl font-medium mb-2 lg:mb-4 text-white/90 tracking-widest drop-shadow-md opacity-0 transition-opacity duration-1000"
       >
         Boa tarde
       </h2>
       <h1
         id="clock"
-        class="text-6xl sm:text-7xl lg:text-9xl font-bold tracking-tighter mb-1 lg:mb-2"
+        class="text-7xl sm:text-8xl lg:text-9xl font-extrabold tracking-tight mb-2 drop-shadow-xl text-white"
       >
         00:00
       </h1>
       <p
         id="date"
-        class="text-base sm:text-lg md:text-2xl font-medium tracking-wide text-gray-200 mb-4 lg:mb-8"
+        class="text-sm sm:text-base md:text-lg font-light tracking-[0.2em] text-white/80 mb-4 lg:mb-8 uppercase drop-shadow-md"
       >
         Carregando...
       </p>
@@ -107,7 +107,7 @@
       <!-- Music card inline (mobile) -->
       <div
         id="music-card-mobile"
-        class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-3 w-full max-w-xs lg:hidden flex items-center gap-3 transition-all duration-500 mb-4"
+        class="bg-white/10 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl p-3 w-full max-w-xs lg:hidden flex items-center gap-3 transition-all duration-500 mb-4"
       >
         <div
           class="relative w-14 h-14 shrink-0 rounded-xl overflow-hidden bg-white/5 flex items-center justify-center shadow-md"
@@ -217,7 +217,7 @@
     <!-- DESKTOP: weather + music (absolute, original layout) -->
     <div
       id="weather-card"
-      class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-6 hidden absolute lg:top-10 lg:right-10 w-72"
+      class="bg-white/10 backdrop-blur-lg border border-white/10 rounded-3xl shadow-2xl p-6 hidden absolute lg:top-10 lg:right-10 w-72 transition-colors hover:bg-white/20"
     >
       <div class="flex items-center gap-4">
         <i
@@ -258,7 +258,7 @@
 
     <div
       id="music-card"
-      class="bg-white/10 border border-white/20 rounded-2xl shadow-xl p-4 hidden absolute lg:bottom-10 lg:left-10 w-72 items-center gap-4 transition-all duration-500"
+      class="bg-white/10 backdrop-blur-lg border border-white/10 rounded-3xl shadow-2xl p-4 hidden absolute lg:bottom-10 lg:left-10 w-80 items-center gap-4 transition-all duration-500 hover:bg-white/20"
     >
       <div
         class="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-white/5 flex items-center justify-center shadow-md"
@@ -729,7 +729,6 @@
       music_next_btn_mobile.addEventListener("click", () =>
         mediaWebSocket.sendMessage("next"),
       );
-
 
     loadQrCode();
     loadKeyBoardShortcuts();

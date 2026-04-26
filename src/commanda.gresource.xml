@@ -2,8 +2,11 @@
 <gresources>
   <gresource prefix="/io/github/idevecore/Commanda">
     <file preprocess="xml-stripblanks">window.ui</file>
+    <file compressed="true" alias="style.css">assets/style.css</file>
     <file preprocess="xml-stripblanks" alias="shortcuts-dialog.ui">components/shortcuts/shortcuts.ui</file>
     <file preprocess="xml-stripblanks">components/home/home.ui</file>
     <file preprocess="xml-stripblanks">components/preferences/preferences.ui</file>
+    <file preprocess="xml-stripblanks">components/location_selector/location_selector.ui</file>
+    <file preprocess="xml-stripblanks">components/location_row/location_row.ui</file>
   </gresource>
 </gresources>

@@ -6,6 +6,8 @@ blueprints = custom_target(
   'blueprints',
   input: files(
     'components/home/home.blp',
+    'components/location_row/location_row.blp',
+    'components/location_selector/location_selector.blp',
     'components/preferences/preferences.blp',
     'components/shortcuts/shortcuts.blp',
     'window.blp',

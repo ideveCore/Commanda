@@ -18,15 +18,26 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+use crate::components::location_selector::LocationSelector;
+use crate::services::weather::WeatherService;
 use adw::subclass::prelude::*;
-use gtk::glib;
+use gtk::{
+    gio::{self, prelude::SettingsExtManual},
+    glib::{self, object::ObjectExt},
+};
 
 mod imp {
     use super::*;
+    use std::cell::RefCell;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/io/github/idevecore/Commanda/components/preferences/preferences.ui")]
-    pub struct Preferences {}
+    pub struct Preferences {
+        #[template_child]
+        pub location_selector: TemplateChild<LocationSelector>,
+        #[template_child]
+        pub ip_location_switch: TemplateChild<adw::SwitchRow>,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for Preferences {
@@ -45,8 +56,8 @@ mod imp {
 
     impl ObjectImpl for Preferences {}
     impl WidgetImpl for Preferences {}
-    impl PreferencesDialogImpl for Preferences {}
     impl AdwDialogImpl for Preferences {}
+    impl PreferencesDialogImpl for Preferences {}
 }
 
 glib::wrapper! {
@@ -55,7 +66,29 @@ glib::wrapper! {
 }
 
 impl Preferences {
-    pub fn new() -> Self {
-        glib::Object::builder().build()
+    pub fn new(app_id: &str) -> Self {
+        let obj: Self = glib::Object::builder().build();
+
+        obj.bind_weather_properties(&app_id);
+        obj
+    }
+
+    pub fn set_weather_service(&self, service: WeatherService, handle: tokio::runtime::Handle) {
+        self.imp()
+            .location_selector
+            .set_weather_service(service, handle);
+    }
+
+    pub fn bind_weather_properties(&self, app_id: &str) {
+        let web_app_id = format!("{}.Weather", app_id);
+        let settings = gio::Settings::new(&web_app_id);
+
+        settings
+            .bind(
+                "use-ip-location",
+                &self.imp().ip_location_switch.get(),
+                "active",
+            )
+            .build();
     }
 }

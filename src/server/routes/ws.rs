@@ -56,9 +56,19 @@ async fn handle_socket(mut socket: WebSocket, mut rx: tokio::sync::broadcast::Re
 
     loop {
         tokio::select! {
-            Ok(event) = rx.recv() => {
-                if socket.send(Message::Text(event.into())).await.is_err() {
-                    break;
+            event_res = rx.recv() => {
+                match event_res {
+                    Ok(event) => {
+                        if socket.send(Message::Text(event.into())).await.is_err() {
+                            break;
+                        }
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
+                        // ignore and continue
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                        break;
+                    }
                 }
             }
             msg = socket.recv() => {
@@ -71,7 +81,12 @@ async fn handle_socket(mut socket: WebSocket, mut rx: tokio::sync::broadcast::Re
                             }
                         }
                     }
-                    Some(Ok(Message::Close(_))) | None => break,
+                    Some(Ok(Message::Ping(p))) => {
+                        if socket.send(Message::Pong(p)).await.is_err() {
+                            break;
+                        }
+                    }
+                    Some(Ok(Message::Close(_))) | Some(Err(_)) | None => break,
                     _ => {}
                 }
             }

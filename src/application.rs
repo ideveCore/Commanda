@@ -25,13 +25,24 @@ use gtk::{gio, glib};
 
 use crate::components::preferences::Preferences;
 use crate::config::VERSION;
+use crate::server::{spawn_server, SharedState};
 use crate::CommandaWindow;
 
 mod imp {
     use super::*;
 
-    #[derive(Debug, Default)]
-    pub struct CommandaApplication {}
+    #[derive(Debug)]
+    pub struct CommandaApplication {
+        pub state: std::cell::OnceCell<SharedState>,
+    }
+
+    impl Default for CommandaApplication {
+        fn default() -> Self {
+            Self {
+                state: std::cell::OnceCell::new(),
+            }
+        }
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for CommandaApplication {
@@ -50,29 +61,23 @@ mod imp {
     }
 
     impl ApplicationImpl for CommandaApplication {
-        // We connect to the activate callback to create a window when the application
-        // has been launched. Additionally, this callback notifies us when the user
-        // tries to launch a "second instance" of the application. When they try
-        // to do that, we'll just present any existing window.
         fn activate(&self) {
             let application = self.obj();
             let app_id = application.application_id().expect("");
-            // Get the current window or create one if necessary
+
+            self.state.get_or_init(|| spawn_server(8080, &app_id));
+
             let window = application.active_window().unwrap_or_else(|| {
                 let window = CommandaWindow::new(&*application);
-
-                let settings = gio::Settings::new(&app_id);
-                settings.bind("width", &window, "default-width").build();
-                settings.bind("height", &window, "default-height").build();
-                settings.bind("is-maximized", &window, "maximized").build();
-                settings
+                let gsettings = gio::Settings::new(&app_id);
+                gsettings.bind("width", &window, "default-width").build();
+                gsettings.bind("height", &window, "default-height").build();
+                gsettings.bind("is-maximized", &window, "maximized").build();
+                gsettings
                     .bind("is-fullscreen", &window, "fullscreened")
                     .build();
-
                 window.upcast()
             });
-
-            // Ask the window manager/compositor to present the window
             window.present();
         }
     }
@@ -104,16 +109,18 @@ impl CommandaApplication {
             .activate(move |app: &Self, _, _| app.show_about())
             .build();
         let preferences_action = gio::ActionEntry::builder("preferences")
-            .activate(move |app: &Self, _, _| app.show_prefrerences())
+            .activate(move |app: &Self, _, _| app.show_preferences())
             .build();
         self.set_accels_for_action("app.preferences", &["<control>comma"]);
         self.add_action_entries([quit_action, about_action, preferences_action]);
     }
 
-    fn show_prefrerences(&self) {
+    fn show_preferences(&self) {
         let window = self.active_window().unwrap();
-        let preferences = Preferences::new();
-
+        let state = self.imp().state.get().expect("state not initialized");
+        let app_id = self.application_id().expect("");
+        let preferences = Preferences::new(&app_id);
+        preferences.set_weather_service(state.weather.clone(), state.runtime_handle.clone());
         preferences.present(Some(&window));
     }
 
@@ -125,11 +132,9 @@ impl CommandaApplication {
             .developer_name("Francisco")
             .version(VERSION)
             .developers(vec!["Francisco"])
-            // Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
             .translator_credits(&gettext("translator-credits"))
             .copyright("© 2026 Francisco")
             .build();
-
         about.present(Some(&window));
     }
 }

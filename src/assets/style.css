@@ -1,0 +1,58 @@
+@define-color accent_color @green_3;
+@define-color accent_bg_color @green_5;
+
+selection {
+  background-color: alpha(@green_1, 0.2);
+}
+
+.pd {
+   padding: 0.5rem;
+ }
+
+ .rounded {
+    border-radius: 6px;
+ }
+
+ .text-light {
+    color: rgb(255, 255, 255);
+ }
+
+.f-l {
+  font-size: 2rem;
+}
+
+.bg-accent-color {
+  background-color: @accent_bg_color;
+}
+
+.top-transform {
+  transform: translateY(-20px);
+}
+
+.large-button {
+  padding: 0.5rem;
+}
+
+
+.search-box {
+  background: @popover_bg_color;
+  border-bottom: 1px solid @borders;
+  padding: 6px;
+}
+
+.location-selector list {
+  padding: 6px;
+  padding-top: 4px;
+}
+
+.location-selector row {
+  margin-top: 2px;
+}
+
+.location-selector separator {
+  margin: 0 6px;
+}
+
+.link {
+  padding: 0px;
+}

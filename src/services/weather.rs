@@ -58,12 +58,38 @@ pub struct WeatherData {
 }
 
 #[derive(Debug, Deserialize)]
+struct GeocodingResponse {
+    results: Option<Vec<LocationInfo>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct LocationInfo {
-    name: String,
-    latitude: f64,
-    longitude: f64,
-    country: String,
-    admin1: String,
+    pub id: i32,
+    pub name: String,
+    pub latitude: f64,
+    pub longitude: f64,
+    #[serde(default)]
+    pub elevation: f64,
+    #[serde(default)]
+    pub feature_code: String,
+    #[serde(default)]
+    pub country_code: String,
+    #[serde(default)]
+    pub admin1_id: i32,
+    #[serde(default)]
+    pub admin2_id: i32,
+    #[serde(default)]
+    pub timezone: String,
+    #[serde(default)]
+    pub population: i32,
+    #[serde(default)]
+    pub country_id: i32,
+    #[serde(default)]
+    pub country: String,
+    #[serde(default)]
+    pub admin1: String,
+    #[serde(default)]
+    pub admin2: String,
 }
 
 struct WeatherCache {
@@ -130,6 +156,22 @@ impl WeatherService {
         Ok(weather)
     }
 
+    pub async fn get_locations(&self, name: &str) -> Result<Vec<LocationInfo>> {
+        let url = format!("https://geocoding-api.open-meteo.com/v1/search?name={}&count=10&language=pt&format=json", name);
+
+        let data = self
+            .client
+            .get(url)
+            .send()
+            .await
+            .context("Failed fetch location")?
+            .json::<GeocodingResponse>()
+            .await
+            .context("Failed parse location")?;
+
+        Ok(data.results.unwrap_or_default())
+    }
+
     async fn get_my_location(&self) -> Result<IpLocation> {
         if self.settings.use_ip_location {
             let loc = reqwest::get("http://ip-api.com/json/")
@@ -186,5 +228,11 @@ impl WeatherService {
             99 => "thunderstorm_with_heavy_hail".to_string(),
             _ => "unknown".to_string(),
         }
+    }
+}
+
+impl std::fmt::Debug for WeatherService {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("WeatherService").finish()
     }
 }

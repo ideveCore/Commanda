@@ -27,7 +27,7 @@ use tokio::sync::OnceCell;
 const BING_BASE_URL: &str = "https://www.bing.com";
 const BING_API_URL: &str = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en_US";
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct WallpaperService {
     client: reqwest::Client,
     cache: Arc<OnceCell<Vec<u8>>>,

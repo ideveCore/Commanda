@@ -25,6 +25,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 use zbus::Connection;
 
+#[derive(Debug)]
 struct UserCache {
     data: SystemUser,
     fetched_at: Instant,
@@ -39,7 +40,7 @@ pub struct SystemUser {
     pub uid: u64,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SystemUserService {
     cache: Arc<Mutex<Option<UserCache>>>,
 }

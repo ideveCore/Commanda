@@ -1,0 +1,69 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LocationSelector: Adw.Bin {
+  MenuButton button {
+    always-show-arrow: true;
+    valign: center;
+    halign: center;
+
+    styles [
+      "raised",
+      "flat",
+    ]
+
+    child: Box {
+      spacing: 3;
+
+      Label label {
+        ellipsize: end;
+        xalign: 0;
+      }
+
+      Label insight {
+        ellipsize: end;
+        xalign: 0;
+      }
+    };
+
+    popover: Popover popover {
+      height-request: 300;
+      width-request: 300;
+
+      styles [
+        "location-selector",
+        "menu",
+      ]
+
+      show => $on_popover_show() swapped;
+      closed => $on_popover_closed() swapped;
+
+      Box {
+        orientation: vertical;
+
+        Box search_box {
+          orientation: vertical;
+
+          SearchEntry search {
+            placeholder-text: _("Search locations");
+            changed => $on_search_changed() swapped;
+            activate => $on_search_activate() swapped;
+          }
+
+          styles [
+            "search-box",
+          ]
+        }
+
+        ScrolledWindow scroll {
+          vexpand: true;
+
+          ListBox location_list {
+            selection-mode: single;
+            row-activated => $on_row_activated() swapped;
+          }
+        }
+      }
+    };
+  }
+}
